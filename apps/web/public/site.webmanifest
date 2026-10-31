@@ -1,0 +1,19 @@
+{
+  "name": "FQ4R Save Editor",
+  "short_name": "FQ4R Editor",
+  "icons": [
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#203A9B",
+  "background_color": "#203A9B",
+  "display": "standalone"
+}

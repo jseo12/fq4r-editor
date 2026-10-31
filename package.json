@@ -1,0 +1,36 @@
+{
+  "name": "fq4r-editor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev:web": "npm run dev -w @fq4r-editor/web",
+    "build": "npm run typecheck && npm run build:web && npm run build:desktop",
+    "typecheck": "tsc --noEmit",
+    "build:web": "npm run build -w @fq4r-editor/web",
+    "build:desktop": "node tools/build-desktop.mjs",
+    "dev:desktop": "npm run setup:desktop && npm run build && electron apps/desktop",
+    "start:desktop": "npm run setup:desktop && electron apps/desktop",
+    "package:desktop": "npm run setup:desktop && npm run build && npm run package -w @fq4r-editor/desktop",
+    "test": "node --test tests/*.test.ts",
+    "test:e2e": "node tools/test-ui.mjs",
+    "setup:desktop": "node tools/setup-desktop.mjs",
+    "test:desktop": "node tools/test-desktop.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@playwright/test": "1.64.1",
+    "electron": "45.1.0",
+    "esbuild": "0.28.2"
+  }
+}

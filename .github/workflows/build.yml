@@ -1,0 +1,102 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Web builds do not need the Electron runtime download.
+      # 웹 빌드에는 Electron 런타임 다운로드가 필요하지 않습니다.
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check types
+        run: npm run typecheck
+      - name: Run unit tests
+        run: npm test
+      - name: Build production web
+        run: npm run build:web
+      - name: Read project version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      # Upload the directory directly to avoid a ZIP nested inside the artifact ZIP.
+      # Artifact ZIP 안에 ZIP이 중첩되지 않도록 폴더를 직접 업로드합니다.
+      - name: Upload web build
+        uses: actions/upload-artifact@v6
+        with:
+          name: fq4r-editor-v${{ steps.version.outputs.version }}-web
+          path: apps/web/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  desktop:
+    name: Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Prepare Electron runtime
+        run: npm run setup:desktop
+      - name: Build production desktop and web
+        run: npm run build
+      - name: Package production desktop
+        run: npm run package -w @fq4r-editor/desktop -- --x64
+      - name: Check packaged executable
+        shell: pwsh
+        run: |
+          if (-not (Test-Path -LiteralPath 'release/win-unpacked/fq4r-editor.exe')) {
+            throw 'Packaged executable was not generated.'
+          }
+      - name: Check packaged locales
+        shell: pwsh
+        run: |
+          $expected = @('en-GB', 'en-US', 'ja', 'ko', 'zh-CN', 'zh-TW') | Sort-Object
+          $actual = Get-ChildItem -LiteralPath 'release/win-unpacked/locales' -Filter '*.pak' | ForEach-Object { $_.BaseName } | Sort-Object
+          if (Compare-Object $expected $actual) {
+            throw 'Packaged locales do not match the configured languages.'
+          }
+      - name: Read project version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content -LiteralPath package.json -Raw | ConvertFrom-Json).version
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Upload Windows app
+        uses: actions/upload-artifact@v6
+        with:
+          name: fq4r-editor-v${{ steps.version.outputs.version }}-windows-x64
+          path: release/win-unpacked/
+          if-no-files-found: error
+          retention-days: 14

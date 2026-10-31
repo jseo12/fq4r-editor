@@ -1,0 +1,47 @@
+{
+  "name": "@fq4r-editor/desktop",
+  "productName": "FQ4R Save Editor",
+  "description": "Local FQ4R Windows remake save viewer and editor foundation",
+  "author": "CorpsePlay.com",
+  "private": true,
+  "version": "1.0.0",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "package": "electron-builder --win --dir"
+  },
+  "devDependencies": {
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.corpseplay.fq4r-editor",
+    "productName": "FQ4R Save Editor",
+    "directories": {
+      "output": "../../release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web"
+      }
+    ],
+    "win": {
+      "target": "dir",
+      "icon": "icon.ico"
+    },
+    "executableName": "fq4r-editor",
+    "electronLanguages": [
+      "ko",
+      "ja",
+      "en-US",
+      "en-GB",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "type": "module"
+}

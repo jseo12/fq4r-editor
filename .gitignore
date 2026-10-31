@@ -1,0 +1,19 @@
+node_modules/
+dist/
+release/
+.cache/
+playwright-report/
+test-results/
+*.log
+*.dat
+*.bak*
+.env*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Local save samples and Python caches
+# 로컬 세이브 샘플과 Python 캐시
+samples/
+__pycache__/
+*.py[cod]
