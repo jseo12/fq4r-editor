@@ -77,7 +77,7 @@ npm run dev:desktop
 ```powershell
 npm run build             # 타입 검사와 웹·데스크톱 빌드
 npm run start:desktop     # 빌드된 데스크톱 앱 실행
-npm run package:desktop   # Windows 앱 폴더: release/win-unpacked/
+npm run package:desktop   # Windows x64 앱 폴더: release/win-unpacked/
 ```
 
 Electron 런타임 준비 명령은 `npm run setup:desktop`이며, 해당 명령의 다운로드 캐시는 `.cache/electron/`에 저장합니다. 패키징 결과는 단일 EXE가 아닌 앱 폴더이므로 배포 시 폴더 전체가 필요합니다. 웹 빌드 결과는 `apps/web/dist/`에 생성됩니다.
@@ -110,18 +110,23 @@ Windows에서 실행합니다.
 
 ```powershell
 npm ci
-npm run package:desktop
+npm run package:desktop:x64   # 64비트
+npm run package:desktop:x86   # 32비트
+# 또는 두 버전을 모두 생성
+npm run package:desktop:all
 ```
 
 Electron 런타임 준비, 타입 검사, 웹·데스크톱 코드 빌드, electron-builder 패키징을 순서대로 수행합니다. 런타임과 패키징 구성 요소의 최초 준비에는 인터넷 연결이 필요할 수 있습니다.
 
-결과는 **`release/win-unpacked/`**이며 실행 파일은 **`release/win-unpacked/fq4r-editor.exe`**입니다. EXE와 함께 DLL·리소스가 필요하므로 배포할 때는 **폴더 전체를 ZIP으로 압축**합니다. 사용자는 압축을 풀고 EXE를 실행하며 Node.js나 npm을 별도로 설치할 필요가 없습니다.
+x64 결과는 **`release/win-unpacked/`**, x86 결과는 **`release/win-ia32-unpacked/`**입니다. 각 폴더의 실행 파일은 **`fq4r-editor.exe`**입니다. `package:desktop`은 기본적으로 x64를 만듭니다.
+
+x64는 프로젝트의 Electron 45.1.0을 사용하고 x86만 Electron 43.8.4로 패키징합니다. Electron 44 이상은 공식 Windows ia32 바이너리를 제공하지 않으며, 마지막 32비트 지원 계열인 Electron 43의 지원 종료 예정은 2027년 1월입니다. [공식 안내](https://www.electronjs.org/blog/electron-43-0). 개발용 Electron 의존성은 변경하지 않습니다. EXE와 함께 DLL·리소스가 필요하므로 배포할 때는 **폴더 전체를 ZIP으로 압축**합니다. 사용자는 압축을 풀고 EXE를 실행하며 Node.js나 npm을 별도로 설치할 필요가 없습니다.
 
 ```powershell
 Compress-Archive -Path .\release\win-unpacked\* -DestinationPath .\release\fq4r-editor-v1.0.0-windows-x64.zip -Force
 ```
 
-위 ZIP 이름은 x64 환경에서 패키징한 예시입니다. 현재 명령은 아키텍처를 별도로 지정하지 않으므로 실제 패키징 대상에 맞게 파일명을 정해주세요. 현재 설정은 앱 폴더 생성(`--dir`)이며 설치 프로그램이나 단일 실행 파일은 생성하지 않습니다.
+위 ZIP 이름은 x64 예시입니다. x86은 `win-ia32-unpacked` 폴더 전체를 `fq4r-editor-v1.0.0-windows-x86.zip`으로 압축합니다. 현재 설정은 앱 폴더 생성(`--dir`)이며 설치 프로그램이나 단일 실행 파일은 생성하지 않습니다.
 
 데스크톱 패키지의 Electron 언어 리소스는 한국어(`ko`), 일본어(`ja`), 영어(`en-US`, `en-GB`), 중국어(`zh-CN`, `zh-TW`)만 포함합니다. 이 설정은 Electron 시스템 문구용 리소스를 제한하며, 에디터 화면 자체의 다국어 번역 기능을 의미하지 않습니다. 그 외 Chromium 리소스·그래픽 DLL·라이선스 고지는 유지합니다.
 
@@ -138,10 +143,11 @@ Windows 아이콘은 `apps/desktop/build/icon.ico`를 사용합니다. 실행 �
 - `main` 대상 Pull Request
 - GitHub의 **Actions → Build → Run workflow** 수동 실행
 
-Node.js 24로 타입 검사·단위 테스트를 수행하고 웹과 Windows x64 앱을 빌드합니다. 성공한 실행의 **Artifacts**에서 다음 파일을 내려받을 수 있습니다. 이름의 버전은 루트 `package.json`을 사용합니다.
+Node.js 24로 타입 검사·단위 테스트를 수행하고 웹과 Windows x64·x86 앱을 각각 빌드합니다. 성공한 실행의 **Artifacts**에서 다음 파일을 내려받을 수 있습니다. 이름의 버전은 루트 `package.json`을 사용합니다.
 
 - `fq4r-editor-v1.0.0-web`: 정적 호스팅에 업로드할 웹 빌드 전체
-- `fq4r-editor-v1.0.0-windows-x64`: EXE와 런타임·리소스가 포함된 Windows 앱 전체
+- `fq4r-editor-v1.0.0-windows-x64`: Windows 64비트 앱 전체
+- `fq4r-editor-v1.0.0-windows-x86`: Windows 32비트 앱 전체
 
 폴더를 직접 Artifact에 업로드하므로 다운로드한 ZIP 안에 ZIP이 중첩되지 않습니다. 보관 기간은 14일입니다. 웹 자동 배포나 GitHub Release 생성·첨부는 수행하지 않습니다. 실제 Electron 창과 브라우저 UI 테스트는 이 빌드 워크플로에 포함하지 않습니다.
 

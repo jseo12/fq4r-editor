@@ -52,11 +52,22 @@ jobs:
           retention-days: 14
 
   desktop:
-    name: Windows x64
+    name: Windows ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            output: release/win-unpacked
+            machine: 34404
+          - arch: x86
+            output: release/win-ia32-unpacked
+            machine: 332
     runs-on: windows-latest
     timeout-minutes: 30
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -67,23 +78,25 @@ jobs:
         run: npm ci
       - name: Run unit tests
         run: npm test
-      - name: Prepare Electron runtime
-        run: npm run setup:desktop
-      - name: Build production desktop and web
-        run: npm run build
       - name: Package production desktop
-        run: npm run package -w @fq4r-editor/desktop -- --x64
+        run: npm run package:desktop:${{ matrix.arch }}
       - name: Check packaged executable
         shell: pwsh
         run: |
-          if (-not (Test-Path -LiteralPath 'release/win-unpacked/fq4r-editor.exe')) {
+          if (-not (Test-Path -LiteralPath '${{ matrix.output }}/fq4r-editor.exe')) {
             throw 'Packaged executable was not generated.'
+          }
+          $bytes = [System.IO.File]::ReadAllBytes('${{ matrix.output }}/fq4r-editor.exe')
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3C)
+          $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+          if ($machine -ne ${{ matrix.machine }}) {
+            throw 'Packaged executable architecture does not match the requested target.'
           }
       - name: Check packaged locales
         shell: pwsh
         run: |
           $expected = @('en-GB', 'en-US', 'ja', 'ko', 'zh-CN', 'zh-TW') | Sort-Object
-          $actual = Get-ChildItem -LiteralPath 'release/win-unpacked/locales' -Filter '*.pak' | ForEach-Object { $_.BaseName } | Sort-Object
+          $actual = Get-ChildItem -LiteralPath '${{ matrix.output }}/locales' -Filter '*.pak' | ForEach-Object { $_.BaseName } | Sort-Object
           if (Compare-Object $expected $actual) {
             throw 'Packaged locales do not match the configured languages.'
           }
@@ -96,7 +109,7 @@ jobs:
       - name: Upload Windows app
         uses: actions/upload-artifact@v6
         with:
-          name: fq4r-editor-v${{ steps.version.outputs.version }}-windows-x64
-          path: release/win-unpacked/
+          name: fq4r-editor-v${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}
+          path: ${{ matrix.output }}/
           if-no-files-found: error
           retention-days: 14
