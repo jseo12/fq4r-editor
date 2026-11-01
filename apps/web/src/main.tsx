@@ -1,8 +1,10 @@
+import { ThemeSelect, useTheme } from './ThemeSelect';
 import { version as projectVersion } from '../../../package.json';
 import { RosterCharacterEditor } from './RosterCharacterEditor';
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { parseSave, editTroop, swapTroopMembers, replaceTroopMember, appendTroopMember, type TroopAppendSource, type TroopMemberSlot, applyTroopMacro, readTroopRecords, type TroopRecord, type TroopMacro, editOverview, editMagicLists, editInventory, editCharacter, repairChecksumBlock, prepareSave, inspectChecksums, SAVE_SIZE, type Difficulty, type ParsedSave, type SpellList, type InventoryEdit, type TroopEdit, type DesktopBridge, type InputResult } from '@fq4r-editor/save-core';
+import './themes/index.css';
 import './styles.css';
 import { Overview } from './Overview';
 import { Characters } from './Characters';
@@ -15,6 +17,7 @@ type Folder = Extract<InputResult, { kind: 'folder' }>;
 const number = (value: number) => value.toLocaleString('ko-KR');
 
 function App() {
+  const [theme, setTheme] = useTheme();
   const desktop = window.fq4rDesktop;
   const input = useRef<HTMLInputElement>(null);
   const sequence = useRef(0);
@@ -291,6 +294,7 @@ function App() {
         if (file) void run(() => browserFile(file));
       }} />
     {!opened && <section className="loading-page">
+    <div className="loading-theme"><ThemeSelect value={theme} onChange={setTheme} /></div>
     <header className="loading-header"><span className="eyebrow">FIRST QUEEN IV · WINDOWS REMAKE</span><h1>FQ4R Save Editor</h1></header>
     <section className="workspace" aria-label="세이브 작업 영역">
       <section className={`first-loading-zone ${dragging ? 'dragging' : ''}`} id="first-loading-zone" aria-label="세이브 로딩"
@@ -319,7 +323,7 @@ function App() {
     </section>}
       {opened && <section className="editor" aria-label="세이브 에디터">
         <header className="editor-header">
-        <div className="section-title"><div><span className="eyebrow">FQ4R Save Editor V{projectVersion} ⓒ CorpsePlay.com</span><h2>{opened.name}</h2></div><button className="secondary" disabled={saving} onClick={returnToSaveSelection}>세이브 선택으로</button></div>
+        <div className="section-title"><div><span className="eyebrow">FQ4R Save Editor V{projectVersion} ⓒ CorpsePlay.com</span><h2>{opened.name}</h2></div><div className="editor-header-actions"><ThemeSelect value={theme} onChange={setTheme} /><button className="secondary" disabled={saving} onClick={returnToSaveSelection}>세이브 선택으로</button></div></div>
         <div className="editor-toolbar"><nav aria-label="에디터 보기">{[['overview', '개요'], ['characters', '캐릭터'], ['troops', '부대'], ['inventory', '아이템'], ['magic', '마법']].map(([id, name]) => <button key={id} disabled={saving} aria-pressed={tab === id} onClick={() => setTab(id)}>{name}</button>)}</nav>{desktop && externallyChanged && <button className="editor-reload" disabled={saving} onClick={() => void reloadCurrentSave()} title="현재 편집 내용을 파일의 최신 데이터로 바꿉니다."><span aria-hidden="true">↻</span> 세이브 다시읽기</button>}<button className="editor-save" disabled={saving} onClick={() => void saveCurrentFile()}><span aria-hidden="true">{desktop ? '💾' : '⤓'}</span> {saving ? '저장 중…' : desktop ? '저장' : '세이브 파일 다운로드'}</button>{desktop && <button className="editor-save editor-save-as" disabled={saving} onClick={() => void saveCurrentFile(true)}><span aria-hidden="true">📄</span> 다른 이름으로 저장</button>}</div>
         {saveMessage && <p className={`save-message${saveMessage.error ? ' save-error' : ''}`} role={saveMessage.error ? 'alert' : 'status'}>{saveMessage.text}</p>}
         </header>

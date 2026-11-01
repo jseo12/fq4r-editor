@@ -1878,3 +1878,112 @@ test('desktop bridge: external change reveals reload and refreshes the editor', 
     await expect.poll(() => page.evaluate(() => (window as any).watchedId)).toBe(null);
   } finally { await browser.close(); }
 });
+
+
+test('web: color themes persist, style dialogs and preserve save bytes and typography', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    const selector = page.getByRole('combobox', { name: '테마 선택', exact: true });
+    await expect(selector).toHaveValue('fq4remake');
+    await expect(selector.locator('option')).toHaveText(['FQ4Remake', 'Light', 'Dark', 'Dracula']);
+    await expect(page.locator('main')).toHaveCSS('background-color', 'rgb(32, 58, 155)');
+    const font = await page.locator('.drop-copy').evaluate(element => getComputedStyle(element).fontFamily);
+    await selector.selectOption('light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('main')).toHaveCSS('background-color', 'rgb(228, 235, 246)');
+    expect(await page.locator('.drop-copy').evaluate(element => getComputedStyle(element).fontFamily)).toBe(font);
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#e4ebf6');
+    await page.reload(); await expect(selector).toHaveValue('light');
+    await expect(page.locator('main')).toHaveCSS('background-color', 'rgb(228, 235, 246)');
+    const data = save();
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'themes.dat', mimeType: 'application/octet-stream', buffer: data });
+    await expect(selector).toHaveValue('light');
+    await expect(page.locator('.tab-panel')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    await expect(page.locator('.character-table th').first()).toHaveCSS('font-size', '18px');
+    await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
+    const modal = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    await expect(modal).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await modal.getByLabel('AT', { exact: true }).fill('1');
+    await expect(modal.getByLabel('AT', { exact: true })).toHaveCSS('color', 'rgb(138, 86, 0)');
+    await modal.getByLabel('CLASS', { exact: true }).click();
+    await expect(modal.locator('.class-select-options')).toBeVisible();
+    await expect(modal.locator('.class-select-options')).toHaveCSS('background-color', 'rgb(244, 247, 252)');
+    await page.screenshot({ path: 'test-results/theme-light-dialog.png', fullPage: true });
+    await modal.getByLabel('CLASS', { exact: true }).click();
+    page.once('dialog', dialog => dialog.accept()); await modal.getByRole('button', { name: '캐릭터 RESET', exact: true }).click();
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await selector.selectOption('dark');
+    await expect(page.locator('.editor-header')).toHaveCSS('background-color', 'rgb(25, 31, 41)');
+    await expect(page.locator('.character-table th').first()).toHaveCSS('background-color', 'rgb(32, 39, 51)');
+    await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
+    await expect(modal).toHaveCSS('background-color', 'rgb(32, 39, 51)');
+    await page.screenshot({ path: 'test-results/theme-dark-dialog.png', fullPage: true });
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await page.getByRole('button', { name: '부대', exact: true }).click();
+    await selector.selectOption('light');
+    await expect(page.locator('.troop-table tbody tr').first().locator('[data-column="NATION"]')).toHaveCSS('color', 'rgb(51, 65, 85)');
+    await page.getByRole('button', { name: '아이템', exact: true }).click(); await page.screenshot({ path: 'test-results/theme-light-inventory.png', fullPage: true });
+    await selector.selectOption('fq4remake');
+    await expect(page.locator('.editor-header')).toHaveCSS('background-color', 'rgb(32, 58, 155)');
+    await expect(page.locator('.tab-panel')).toHaveCSS('background-color', 'rgb(41, 74, 197)');
+    const downloadPromise = page.waitForEvent('download'); await page.getByRole('button', { name: '세이브 파일 다운로드', exact: true }).click();
+    const file = await downloadPromise; expect(await readFile((await file.path())!)).toEqual(data);
+    await selector.selectOption('dark'); await page.getByRole('button', { name: '세이브 선택으로', exact: true }).click();
+    await expect(selector).toHaveValue('dark');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: 'test-results/theme-dark-mobile-loading.png', fullPage: true });
+    expect(await page.locator('body').evaluate(element => element.scrollWidth <= window.innerWidth)).toBe(true);
+  } finally { await browser.close(); }
+});
+
+test('web: theme selection handles unavailable storage and unknown theme IDs', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage();
+  try {
+    await page.addInitScript(() => {
+      Storage.prototype.getItem = () => { throw new Error('Storage unavailable'); };
+      Storage.prototype.setItem = () => { throw new Error('Storage unavailable'); };
+    });
+    await page.goto('http://127.0.0.1:5174');
+    const selector = page.getByRole('combobox', { name: '테마 선택', exact: true });
+    await expect(selector).toHaveValue('fq4remake'); await selector.selectOption('dark');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    const other = await browser.newPage(); await other.addInitScript(() => localStorage.setItem('fq4r-editor.theme', 'unknown-theme'));
+    await other.goto('http://127.0.0.1:5174');
+    await expect(other.getByRole('combobox', { name: '테마 선택', exact: true })).toHaveValue('fq4remake');
+    await expect(other.locator('html')).toHaveAttribute('data-theme', 'fq4remake');
+  } finally { await browser.close(); }
+});
+
+
+test('web: Dracula palette covers loading, editor, character dialog and persistence', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    const selector = page.getByRole('combobox', { name: '테마 선택', exact: true });
+    await selector.selectOption('dracula');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dracula');
+    await expect(page.locator('main')).toHaveCSS('background-color', 'rgb(33, 34, 44)');
+    await expect(page.locator('.drop-copy')).toHaveCSS('color', 'rgb(248, 248, 242)');
+    await page.reload(); await expect(selector).toHaveValue('dracula');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'dracula.dat', mimeType: 'application/octet-stream', buffer: save() });
+    await expect(page.locator('.tab-panel')).toHaveCSS('background-color', 'rgb(40, 42, 54)');
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#21222C');
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
+    const modal = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    await expect(modal).toHaveCSS('background-color', 'rgb(40, 42, 54)');
+    await expect(modal.getByLabel('AT', { exact: true })).toHaveCSS('background-color', 'rgb(52, 55, 70)');
+    await modal.getByLabel('AT', { exact: true }).fill('1');
+    await expect(modal.getByLabel('AT', { exact: true })).toHaveCSS('color', 'rgb(241, 250, 140)');
+    await page.screenshot({ path: 'test-results/theme-dracula-dialog.png', fullPage: true });
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await page.getByRole('button', { name: '부대', exact: true }).click();
+    await expect(page.locator('.troop-table tbody tr').first().locator('[data-column="NATION"]')).toHaveCSS('color', 'rgb(248, 248, 242)');
+    await page.getByRole('button', { name: '세이브 선택으로', exact: true }).click();
+    await expect(selector).toHaveValue('dracula');
+  } finally { await browser.close(); }
+});
