@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { CharacterEditor } from './CharacterEditor';
 import { ClassImage } from './ClassImage';
 import { displayValues } from './character-display';
-import { characterName, className, itemName, spellName, type Character } from '@fq4r-editor/save-core';
+import { characterPower, characterName, className, itemName, spellName, type Character } from '@fq4r-editor/save-core';
 
-const columns = ['NO', 'LEAD', 'NAME', 'CLASS', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL'];
+const columns = ['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL'];
 const green = new Set(['CLASS', 'HR', 'AR', 'DR', 'AA']);
 function columnColor(column: string): string | undefined {
   return green.has(column) ? 'stat-green' : column === 'LV' ? 'stat-cyan' : undefined;
@@ -13,8 +13,8 @@ function columnColor(column: string): string | undefined {
 
 export function Characters({ characters, showNpc, onShowNpc, showModified, onShowModified, bytes, originalCharacters, onSave }: { characters: Character[]; showModified: boolean; onShowModified(value: boolean): void; showNpc: boolean; onShowNpc(value: boolean): void; bytes: Uint8Array; originalCharacters: Uint8Array; onSave(index: number, record: Uint8Array): void }) {
   const [editing, setEditing] = useState<number | null>(null);
-  // Reuse the original-file byte comparison for both filtering and NO markers.
-  // 필터와 NO 표시는 최초 파일의 바이트를 비교하는 동일한 변경 기준을 사용합니다.
+  // Reuse the original-file byte comparison for both filtering and ID markers.
+  // 필터와 ID 표시는 최초 파일의 바이트를 비교하는 동일한 변경 기준을 사용합니다.
   const changedIndices = new Set(characters.filter(character => bytes.subarray(0x9a6 + character.index * 32, 0x9a6 + (character.index + 1) * 32)
     .some((byte, offset) => byte !== originalCharacters[character.index * 32 + offset])).map(character => character.index));
   const npcCount = characters.filter(character => character.index < 220).length;
@@ -36,7 +36,13 @@ export function Characters({ characters, showNpc, onShowNpc, showModified, onSho
         const recordChanged = changedIndices.has(character.index);
         const currentValues = displayValues(currentRecord);
         const originalValues = displayValues(originalRecord);
-        const cellClass = (column: string, empty = false) => [columnColor(column), empty ? 'empty-value' : '', (column === 'NO' ? recordChanged : currentValues[column] !== originalValues[column]) ? 'character-cell-changed' : ''].filter(Boolean).join(' ');
+        // POWER includes equipment, fatigue and class bonuses, but no troop-header bonus.
+        // 장비·피로·직업 보정은 포함하며 부대 헤더의 강화 가산은 제외합니다.
+        currentValues.POWER = characterPower(character);
+        originalValues.POWER = characterPower({ ...character,
+          classId: originalRecord[12], item: originalRecord[21], fatigue: originalRecord[10], recoveryRaw: originalRecord[25],
+          hp: originalRecord[26] | originalRecord[27] << 8, attack: originalRecord[28], hit: originalRecord[29], defense: originalRecord[30], evasion: originalRecord[31] });
+        const cellClass = (column: string, empty = false) => [columnColor(column), empty ? 'empty-value' : '', (column === 'ID' ? recordChanged : currentValues[column] !== originalValues[column]) ? 'character-cell-changed' : ''].filter(Boolean).join(' ');
         const recovery = character.recoveryRaw === 0 ? 16 : character.recoveryRaw;
         const hr = character.item === 0x2d ? Math.min(recovery + 5, 16) : recovery;
         const ad = 30 - Math.min(character.projectileDefensePenalty, 30);
@@ -44,8 +50,8 @@ export function Characters({ characters, showNpc, onShowNpc, showModified, onSho
         const elements = [[0x10, 'F'], [0x20, 'E'], [0x40, 'A'], [0x80, 'W']] as const;
         const el = elements.map(([mask, name]) => character.elementFlags & mask ? name : '-').join('');
         return <tr key={character.index} className="character-edit-row" tabIndex={0} aria-label={`${characterName(character.nameId)} 편집`} onClick={() => setEditing(character.index)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setEditing(character.index); } }}>
-          <td data-column="NO" className={cellClass('NO')}>{character.index}{recordChanged ? '*' : ''}</td><td data-column="LEAD" className={cellClass('LEAD')}>{character.lead > 0 ? `⭐${character.lead}` : ''}</td><td data-column="NAME" className={cellClass('NAME', character.nameId === 0)}>{characterName(character.nameId)}</td>
-          <td data-column="CLASS" className={cellClass('CLASS')}><span className="character-class"><ClassImage classId={character.classId} />{className(character.classId)}</span></td><td data-column="LV" className={cellClass('LV')}>{character.level}</td><td data-column="HP" className={cellClass('HP')}>{character.hp}</td>
+          <td data-column="ID" className={cellClass('ID')}>{character.index}{recordChanged ? '*' : ''}</td><td data-column="LEAD" className={cellClass('LEAD')}>{character.lead > 0 ? `⭐${character.lead}` : ''}</td><td data-column="NAME" className={cellClass('NAME', character.nameId === 0)}>{characterName(character.nameId)}</td>
+          <td data-column="CLASS" className={cellClass('CLASS')}><span className="character-class"><ClassImage classId={character.classId} />{className(character.classId)}</span></td><td data-column="POWER" className={cellClass('POWER')} title="장비·피로·직업 보정을 포함한 개인 POWER">{currentValues.POWER}</td><td data-column="LV" className={cellClass('LV')}>{character.level}</td><td data-column="HP" className={cellClass('HP')}>{character.hp}</td>
           <td data-column="HR" className={cellClass('HR')} title={`저장 HR: ${character.recoveryRaw}`}>{hr}</td><td data-column="AT" className={cellClass('AT')}>{character.attack}</td><td data-column="AR" className={cellClass('AR')}>{character.hit}</td>
           <td data-column="DF" className={cellClass('DF')}>{character.defense}</td><td data-column="DR" className={cellClass('DR')}>{character.evasion}</td>
           <td data-column="AD" className={cellClass('AD')} title={`저장 AD 감소량: ${character.projectileDefensePenalty}`}>{ad}</td><td data-column="AA" className={cellClass('AA')}>{character.projectileAttack}</td>

@@ -377,13 +377,13 @@ test('web: local file validation, read view, and mobile layout', async () => {
     expect(characterIndices).toContain('639');
     expect(characterIndices).not.toContain('530');
     await expect(page.locator('tbody tr').filter({ has: page.locator('td:first-child', { hasText: /^529$/ }) }).locator('td').nth(2)).toHaveText('(이름없음)');
-    const allColumns = ['NO', 'LEAD', 'NAME', 'CLASS', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL'];
+    const allColumns = ['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL'];
     for (const width of [1600, 1599, 1440, 1439, 1280, 1279, 960, 959, 390]) {
       await page.setViewportSize({ width, height: 900 });
       const wanted = width >= 1600 ? allColumns : width >= 1440 ? allColumns.filter(c => c !== 'SKILL')
         : width >= 1280 ? allColumns.filter(c => !['SKILL', 'EL+', 'FT'].includes(c))
-        : width >= 960 ? ['NO', 'LEAD', 'NAME', 'CLASS', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'ITEM']
-        : ['NO', 'LEAD', 'NAME', 'CLASS', 'LV', 'ITEM'];
+        : width >= 960 ? ['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'ITEM']
+        : ['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'ITEM'];
       await expect(page.locator('.character-table th:visible')).toHaveText(wanted);
       const visibleCells = page.locator('.character-table tbody tr').first().locator('td:visible');
       expect(await visibleCells.evaluateAll(cells => cells.map(cell => cell.getAttribute('data-column')))).toEqual(wanted);
@@ -392,11 +392,11 @@ test('web: local file validation, read view, and mobile layout', async () => {
     await page.setViewportSize({ width: 1600, height: 900 });
     const aresRow = page.locator('.character-table tbody tr').filter({ has: page.getByRole('cell', { name: '아레스', exact: true }) });
     await aresRow.click();
-    const characterModal = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    const characterModal = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await expect(characterModal).toBeVisible();
     await expect(characterModal.locator('.record-hex-byte')).toHaveCount(32);
     await expect(characterModal.locator('.character-dialog-header .class-image')).toHaveCount(0);
-    await expect(characterModal.locator('.character-dialog-header h2')).toHaveText('NO 220');
+    await expect(characterModal.locator('.character-dialog-header h2')).toHaveText('ID 220');
     await expect(characterModal.locator('.character-hex-labels > span')).toHaveText(['00', '01', 'NAME', '04', '05', 'CS', 'LD', 'EL', 'ST', 'FT', 'EX', 'CL', 'ID', 'EV', 'EV', 'AA', 'AD', 'MD', 'SP', 'PJ', 'IT', '16', 'SK', 'LV', 'HR', 'HP', 'HP', 'AT', 'AR', 'DF', 'DR']);
 
     const classPicker = characterModal.getByRole('combobox', { name: 'CLASS', exact: true });
@@ -475,7 +475,7 @@ test('web: local file validation, read view, and mobile layout', async () => {
       await input.fill(size === 2 ? '4660' : '171');
       const after = await characterModal.locator('.record-hex-byte').allTextContents();
       expect(after[offset]).toBe(size === 2 ? '34' : 'AB');
-      await expect(aresRow.locator('[data-column="NO"]')).toHaveText('220*');
+      await expect(aresRow.locator('[data-column="ID"]')).toHaveText('220*');
       if (size === 2) expect(after[offset + 1]).toBe('12');
       for (let i = 0; i < 32; i++) if (i < offset || i >= offset + size) expect(after[i]).toBe(before[i]);
       await input.fill(original);
@@ -554,7 +554,7 @@ test('web: local file validation, read view, and mobile layout', async () => {
     await characterModal.getByLabel('AI 파라미터(전투성향)', { exact: true }).fill('17');
     await expect(characterModal.getByRole('button', { name: '이전 캐릭터', exact: true })).toBeDisabled();
     await characterModal.getByRole('button', { name: '다음 캐릭터', exact: true }).click();
-    const nextModal = page.getByRole('dialog', { name: 'NO 221', exact: true });
+    const nextModal = page.getByRole('dialog', { name: 'ID 221', exact: true });
     await expect(nextModal).toBeVisible();
     const unknownLocation = nextModal.getByRole('combobox', { name: '사망·포로·실종 위치', exact: true });
     await expect(unknownLocation).toHaveValue('4660');
@@ -643,7 +643,7 @@ test('web: local file validation, read view, and mobile layout', async () => {
     await expect(nextModal.locator('.record-hex-byte')).toHaveText(originalCharacter);
     await expect(nextModal.getByLabel('LV', { exact: true })).toHaveValue('0');
     await expect(nextModal.locator('.record-hex-byte.changed')).toHaveCount(0);
-    await expect(page.locator('.character-table tbody tr').filter({ has: page.getByRole('cell', { name: '애레인', exact: true }) }).locator('[data-column="NO"]')).toHaveText('221');
+    await expect(page.locator('.character-table tbody tr').filter({ has: page.getByRole('cell', { name: '애레인', exact: true }) }).locator('[data-column="ID"]')).toHaveText('221');
     await expect(nextModal.locator('.character-field-changed, .character-flag-changed')).toHaveCount(0);
     await expect(page.locator('.character-table tbody tr').filter({ has: page.getByRole('cell', { name: '애레인', exact: true }) }).locator('.character-cell-changed')).toHaveCount(0);
     await expect(nextModal.getByRole('combobox', { name: '사망·포로·실종 위치', exact: true })).toHaveValue('4660');
@@ -655,15 +655,15 @@ test('web: local file validation, read view, and mobile layout', async () => {
     await page.screenshot({ path: 'test-results/character-modal.png', fullPage: true });
     await expect(aresRow.locator('[data-column="AT"]')).toHaveText('99');
     await expect(aresRow.locator('[data-column="AT"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
-    await expect(aresRow.locator('[data-column="NO"]')).toHaveText('220*');
-    await expect(aresRow.locator('[data-column="NO"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
+    await expect(aresRow.locator('[data-column="ID"]')).toHaveText('220*');
+    await expect(aresRow.locator('[data-column="ID"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
     await characterModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await expect(characterModal).toHaveCount(0);
     await expect(aresRow.locator('[data-column="HP"]')).toHaveText('999');
     await expect(aresRow.locator('[data-column="AT"]')).toHaveText('99');
     await expect(aresRow.locator('[data-column="AT"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
-    await expect(aresRow.locator('[data-column="NO"]')).toHaveText('220*');
-    await expect(aresRow.locator('[data-column="NO"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
+    await expect(aresRow.locator('[data-column="ID"]')).toHaveText('220*');
+    await expect(aresRow.locator('[data-column="ID"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
     await aresRow.click();
     await expect(characterModal.locator('.record-hex-byte[data-offset="28"]')).toHaveClass(/changed/);
     await expect(characterModal.getByLabel('AT', { exact: true })).toHaveCSS('color', 'rgb(247, 247, 0)');
@@ -686,7 +686,7 @@ test('web: local file validation, read view, and mobile layout', async () => {
     await expect(characterModal).toHaveCount(0);
     await page.setViewportSize({ width: 1600, height: 900 });
     await expect(page.getByRole('columnheader', { name: 'NAME', exact: true })).toBeVisible();
-    await expect(page.locator('.character-table th')).toHaveText(['NO', 'LEAD', 'NAME', 'CLASS', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL']);
+    await expect(page.locator('.character-table th')).toHaveText(['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL']);
     for (const column of ['CLASS', 'HR', 'AR', 'DR', 'AA']) {
       await expect(page.getByRole('columnheader', { name: column, exact: true })).toHaveCSS('color', 'rgb(124, 247, 124)');
     }
@@ -761,7 +761,7 @@ test('web: modified-character filter enables on edits, combines with NPC visibil
     await expect(page.locator('label[for="show-npc"] .character-filter-count')).toHaveText('(220명)');
     await expect(page.locator('label[for="show-modified-characters"] .character-filter-count')).toHaveText('(0명)');
     await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
-    const ares = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    const ares = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await ares.getByLabel('AT', { exact: true }).fill('10');
     await ares.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await expect(toggle).toBeEnabled();
@@ -773,7 +773,7 @@ test('web: modified-character filter enables on edits, combines with NPC visibil
     await expect(toggle).toBeChecked(); await expect(rows).toHaveCount(1);
     await toggle.uncheck(); await npc.check();
     await rows.filter({ has: page.locator('td[data-column="NO"]', { hasText: /^0$/ }) }).click();
-    const npcModal = page.getByRole('dialog', { name: 'NO 0', exact: true });
+    const npcModal = page.getByRole('dialog', { name: 'ID 0', exact: true });
     await npcModal.getByLabel('AI 파라미터(전투성향)', { exact: true }).fill('5');
     await npcModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await toggle.check(); await expect(rows).toHaveCount(2);
@@ -1632,7 +1632,7 @@ test('web: roster changes highlight whole rows and star slot numbers against ori
     await expect(current.locator('tbody [data-column="NO"]')).toHaveText(['1', '2', '3', '4*']); await expect(rows.last().locator('[data-column="NAME"]')).toHaveCSS('color', 'rgb(247, 247, 0)');
     page.once('dialog', dialog => dialog.accept()); await modal.getByRole('button', { name: '부대 RESET', exact: true }).click(); await expect(current.locator('tbody [data-column="NO"]')).toHaveText(['1', '2', '3']);
     await modal.getByRole('button', { name: '부대 편집 닫기', exact: true }).click(); await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
-    const characterModal = page.getByRole('dialog', { name: 'NO 220', exact: true }); await characterModal.getByLabel('AT', { exact: true }).fill('1'); await characterModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    const characterModal = page.getByRole('dialog', { name: 'ID 220', exact: true }); await characterModal.getByLabel('AT', { exact: true }).fill('1'); await characterModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('checkbox', { name: '비활성부대 보기', exact: true }).check(); await page.getByRole('row', { name: '부대 7 편집', exact: true }).click(); await modal.getByRole('tab', { name: '부대 편성', exact: true }).click();
     await expect(rows.nth(0).locator('[data-column="NO"]')).toHaveText('1*'); await expect(rows.nth(0).locator('[data-column="ID"]')).toHaveText('220');
     for (const cell of await rows.nth(0).locator('td:visible').all()) await expect(cell).toHaveCSS('color', 'rgb(247, 247, 0)');
@@ -1667,7 +1667,7 @@ test('web: modified troop picker rows keep nation color and mark leader names', 
     await modal.getByRole('tab', { name: '부대 정보', exact: true }).click(); await modal.getByRole('button', { name: '아군부대로 복제', exact: true }).click(); await modal.getByRole('tab', { name: '부대 편성', exact: true }).click();
     await expect(third.getByRole('row', { name: /제3부대 NO 1 / }).locator('[data-column="NAME"]')).toHaveText('아레스*'); await expect(row(third).locator('[data-column="NAME"]')).toHaveText('아레스');
     await modal.getByRole('button', { name: '부대 편집 닫기', exact: true }).click(); await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
-    const charModal = page.getByRole('dialog', { name: 'NO 220', exact: true }); await charModal.getByLabel('AT', { exact: true }).fill('1'); await charModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    const charModal = page.getByRole('dialog', { name: 'ID 220', exact: true }); await charModal.getByLabel('AT', { exact: true }).fill('1'); await charModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('checkbox', { name: '비활성부대 보기', exact: true }).check(); await page.getByRole('row', { name: '부대 7 편집', exact: true }).click(); await modal.getByRole('tab', { name: '부대 편성', exact: true }).click(); await expect(row(second).locator('[data-column="NAME"]')).toHaveText('아레스*');
     await page.screenshot({ path: 'test-results/troop-list-change-highlights.png', fullPage: true });
   } finally { await browser.close(); }
@@ -1690,7 +1690,7 @@ test('web: roster sprite backgrounds mark only changed members in main and compa
     await modal.getByRole('tab', { name: '부대 정보', exact: true }).click(); await modal.getByLabel('이동 명령', { exact: true }).selectOption('254'); await modal.getByRole('tab', { name: '부대 편성', exact: true }).click(); await expect(otherRow(third, 3).locator('.roster-image-changed')).toHaveCount(0);
     await second.getByRole('combobox', { name: '제2부대 캐릭터 필터', exact: true }).selectOption('characters'); await current.locator('tfoot .roster-new-row').click(); await second.getByRole('table').locator('tbody tr').nth(250).click(); await expect(otherRow(third, 3).locator('.roster-image-changed')).toHaveCount(1); await expect(otherRow(third, 3).locator('.roster-image').nth(3)).toHaveCSS('background-color', 'rgb(247, 247, 0)');
     page.once('dialog', dialog => dialog.accept()); await modal.getByRole('button', { name: '부대 RESET', exact: true }).click(); await expect(mainRow.locator('.roster-image-changed')).toHaveCount(0); await modal.getByRole('button', { name: '부대 편집 닫기', exact: true }).click();
-    await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await page.getByRole('row', { name: '아레스 편집', exact: true }).click(); const charModal = page.getByRole('dialog', { name: 'NO 220', exact: true }); await charModal.getByLabel('AT', { exact: true }).fill('1'); await charModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await page.getByRole('row', { name: '아레스 편집', exact: true }).click(); const charModal = page.getByRole('dialog', { name: 'ID 220', exact: true }); await charModal.getByLabel('AT', { exact: true }).fill('1'); await charModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('checkbox', { name: '비활성부대 보기', exact: true }).check(); await expect(mainRow.locator('.roster-image-changed')).toHaveCount(1); await expect(mainRow.locator('.roster-image').nth(0)).toHaveCSS('background-color', 'rgb(247, 247, 0)');
     await page.screenshot({ path: 'test-results/troop-roster-sprite-highlights.png', fullPage: true });
   } finally { await browser.close(); }
@@ -1748,15 +1748,15 @@ test('web: formation double click opens character editor with roster navigation 
     await troop.getByRole('tab', { name: '부대 편성', exact: true }).click();
     const rows = troop.getByRole('table', { name: '현재 부대원 목록', exact: true }).locator('tbody tr');
     await rows.first().dblclick();
-    let editor = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    let editor = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await expect(editor).toBeVisible();
     await expect(editor.getByRole('button', { name: '이전 캐릭터', exact: true })).toBeDisabled();
     await editor.getByLabel('AT', { exact: true }).fill('99');
     await editor.getByRole('button', { name: '다음 캐릭터', exact: true }).click();
-    editor = page.getByRole('dialog', { name: 'NO 221', exact: true });
+    editor = page.getByRole('dialog', { name: 'ID 221', exact: true });
     await expect(editor).toBeVisible();
     await editor.getByRole('button', { name: '다음 캐릭터', exact: true }).click();
-    editor = page.getByRole('dialog', { name: 'NO 639', exact: true });
+    editor = page.getByRole('dialog', { name: 'ID 639', exact: true });
     await expect(editor).toBeVisible();
     await expect(editor.getByRole('button', { name: '다음 캐릭터', exact: true })).toBeDisabled();
     await editor.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
@@ -1770,10 +1770,10 @@ test('web: formation double click opens character editor with roster navigation 
     const second = troop.getByRole('group', { name: '제2부대', exact: true });
     await second.getByRole('combobox', { name: '제2부대 캐릭터 필터', exact: true }).selectOption('characters');
     await second.getByRole('table').locator('tbody tr').nth(5).dblclick();
-    editor = page.getByRole('dialog', { name: 'NO 5', exact: true });
+    editor = page.getByRole('dialog', { name: 'ID 5', exact: true });
     await expect(editor).toBeVisible();
     await editor.getByRole('button', { name: '다음 캐릭터', exact: true }).click();
-    await expect(page.getByRole('dialog', { name: 'NO 6', exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'ID 6', exact: true })).toBeVisible();
   } finally { await browser.close(); }
 });
 
@@ -1904,7 +1904,7 @@ test('web: color themes persist, style dialogs and preserve save bytes and typog
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     await expect(page.locator('.character-table th').first()).toHaveCSS('font-size', '18px');
     await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
-    const modal = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await expect(modal).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await modal.getByLabel('AT', { exact: true }).fill('1');
     await expect(modal.getByLabel('AT', { exact: true })).toHaveCSS('color', 'rgb(138, 86, 0)');
@@ -1974,7 +1974,7 @@ test('web: Dracula palette covers loading, editor, character dialog and persiste
     await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#21222C');
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
-    const modal = page.getByRole('dialog', { name: 'NO 220', exact: true });
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await expect(modal).toHaveCSS('background-color', 'rgb(40, 42, 54)');
     await expect(modal.getByLabel('AT', { exact: true })).toHaveCSS('background-color', 'rgb(52, 55, 70)');
     await modal.getByLabel('AT', { exact: true }).fill('1');
@@ -1985,5 +1985,37 @@ test('web: Dracula palette covers loading, editor, character dialog and persiste
     await expect(page.locator('.troop-table tbody tr').first().locator('[data-column="NATION"]')).toHaveCSS('color', 'rgb(248, 248, 242)');
     await page.getByRole('button', { name: '세이브 선택으로', exact: true }).click();
     await expect(selector).toHaveValue('dracula');
+  } finally { await browser.close(); }
+});
+
+
+test('web: character POWER follows the game formula and remains visible at every width', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1000 } });
+  try {
+    const data = save(); const offset = 0x9a6 + 220 * 32;
+    data[offset + 12] = 0x89; data[offset + 10] = 17; data[offset + 21] = 0x10;
+    data.writeUInt16LE(999, offset + 26); data.set([73, 65, 56, 48], offset + 28);
+    const character = parseSave(data).characters.find(character => character.index === 220)!;
+    const originalPower = characterPower(character);
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'character-power.dat', mimeType: 'application/octet-stream', buffer: data });
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    const row = page.getByRole('row', { name: '아레스 편집', exact: true }); const cell = row.locator('[data-column="POWER"]');
+    await expect(cell).toHaveText(String(originalPower));
+    for (const width of [1920, 1600, 1599, 1440, 1439, 1280, 1279, 960, 959, 640, 390, 320]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await expect(page.locator('.character-table th[data-column="POWER"]')).toBeVisible();
+      await expect(cell).toBeVisible(); await expect(cell).toHaveText(String(originalPower));
+    }
+    await page.setViewportSize({ width: 1280, height: 1000 }); await row.click();
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    await modal.getByRole('button', { name: 'FT ZERO', exact: true }).click();
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    const editedPower = characterPower({ ...character, fatigue: 0 }); expect(editedPower).not.toBe(originalPower);
+    await expect(cell).toHaveText(String(editedPower)); await expect(cell).toHaveCSS('color', 'rgb(247, 247, 0)');
+    await row.click(); page.once('dialog', dialog => dialog.accept()); await modal.getByRole('button', { name: '캐릭터 RESET', exact: true }).click();
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await expect(cell).toHaveText(String(originalPower)); await expect(cell).not.toHaveClass(/character-cell-changed/);
   } finally { await browser.close(); }
 });

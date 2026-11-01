@@ -586,3 +586,7 @@ html:has(.folder-list-content)::-webkit-scrollbar, body:has(.folder-list-content
   .editor-header .section-title { flex-wrap: wrap; }
   .editor-header-actions { flex-wrap: wrap; gap: 8px; }
 }
+
+/* Keep character POWER visible at every responsive tier.
+   캐릭터 POWER는 모든 반응형 구간에서 표시합니다. */
+.character-table :is(th, td)[data-column="POWER"] { min-width: 76px; }

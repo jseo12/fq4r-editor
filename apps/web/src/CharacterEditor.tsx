@@ -105,7 +105,7 @@ export function CharacterEditor({ index, record, resetRecord, onClose, onChange,
     <form onSubmit={event => event.preventDefault()}>
       <header className="character-dialog-header">
         <div className="character-dialog-navigation">
-          <h2 id="character-editor-title">NO {index}</h2>
+          <h2 id="character-editor-title">ID {index}</h2>
           <div className="character-navigation-buttons">
             <button type="button" aria-label="이전 캐릭터" disabled={!onPrevious} onClick={onPrevious}>←</button>
             <button type="button" aria-label="다음 캐릭터" disabled={!onNext} onClick={onNext}>→</button>
