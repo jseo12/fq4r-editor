@@ -359,7 +359,8 @@ html:has(.folder-list-content)::-webkit-scrollbar, body:has(.folder-list-content
 .troop-edit-error { margin: 10px; color: var(--color-error-soft); }
 @media (width < 420px) { .troop-map-field { grid-column: auto; } }
 
-.character-controls { display: flex; flex-wrap: wrap; gap: 10px 20px; }
+.character-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; }
+.character-controls > select { width: 320px; max-width: 100%; flex: 0 1 320px; }
 .character-controls label:has(input:disabled) { color: var(--color-text-disabled); cursor: default; }
 
 /* Keep troop byte inspection compact while preserving a readable mobile header.

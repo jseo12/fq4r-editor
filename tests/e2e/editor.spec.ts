@@ -360,16 +360,16 @@ test('web: local file validation, read view, and mobile layout', async () => {
     await expect(selectedTroop.locator('.roster-more')).toHaveCount(0);
 
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
-    const npcToggle = page.getByRole('checkbox', { name: 'NPC 캐릭터 표시', exact: true });
-    await expect(npcToggle).not.toBeChecked();
+    const npcToggle = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
+    await expect(npcToggle).toHaveValue('named');
     await expect(page.locator('tbody tr')).toHaveCount(311);
     await expect(page.locator('tbody tr').first().locator('td').first()).toHaveText('220');
     await expect(page.getByRole('columnheader', { name: '이름 ID', exact: true })).toHaveCount(0);
     await expect(page.getByRole('columnheader', { name: '직업 ID', exact: true })).toHaveCount(0);
-    await npcToggle.check();
+    await npcToggle.selectOption('all');
     await expect(page.locator('tbody tr')).toHaveCount(531);
     await expect(page.locator('tbody tr').first().locator('td').first()).toHaveText('0');
-    await npcToggle.uncheck();
+    await npcToggle.selectOption('named');
     await expect(page.locator('tbody tr')).toHaveCount(311);
     const characterIndices = await page.locator('tbody tr td:first-child').allTextContents();
     expect(characterIndices).toContain('528');
@@ -755,10 +755,10 @@ test('web: modified-character filter enables on edits, combines with NPC visibil
     await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'characters.dat', mimeType: 'application/octet-stream', buffer: save() });
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     const toggle = page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true });
-    const npc = page.getByRole('checkbox', { name: 'NPC 캐릭터 표시', exact: true });
+    const npc = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
     const rows = page.locator('.character-table tbody tr');
     await expect(toggle).toBeDisabled(); await expect(toggle).not.toBeChecked();
-    await expect(page.locator('label[for="show-npc"] .character-filter-count')).toHaveText('(220명)');
+    await expect(npc).toHaveValue('named');
     await expect(page.locator('label[for="show-modified-characters"] .character-filter-count')).toHaveText('(0명)');
     await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
     const ares = page.getByRole('dialog', { name: 'ID 220', exact: true });
@@ -771,21 +771,21 @@ test('web: modified-character filter enables on edits, combines with NPC visibil
     await page.getByRole('button', { name: '개요', exact: true }).click();
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     await expect(toggle).toBeChecked(); await expect(rows).toHaveCount(1);
-    await toggle.uncheck(); await npc.check();
-    await rows.filter({ has: page.locator('td[data-column="NO"]', { hasText: /^0$/ }) }).click();
+    await toggle.uncheck(); await npc.selectOption('all');
+    await rows.filter({ has: page.locator('td[data-column="ID"]', { hasText: /^0$/ }) }).click();
     const npcModal = page.getByRole('dialog', { name: 'ID 0', exact: true });
     await npcModal.getByLabel('AI 파라미터(전투성향)', { exact: true }).fill('5');
     await npcModal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await toggle.check(); await expect(rows).toHaveCount(2);
     await expect(page.locator('label[for="show-modified-characters"] .character-filter-count')).toHaveText('(2명)');
-    await npc.uncheck(); await expect(rows).toHaveCount(1);
+    await npc.selectOption('named'); await expect(rows).toHaveCount(1);
     await rows.first().click();
     page.once('dialog', dialog => dialog.accept());
     await ares.getByRole('button', { name: '캐릭터 RESET', exact: true }).click();
     await ares.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await expect(toggle).toBeEnabled(); await expect(rows).toHaveCount(0);
     await expect(page.getByText('표시할 캐릭터가 없습니다.', { exact: true })).toBeVisible();
-    await npc.check(); await expect(rows).toHaveCount(1);
+    await npc.selectOption('all'); await expect(rows).toHaveCount(1);
     await rows.first().click();
     page.once('dialog', dialog => dialog.accept());
     await npcModal.getByRole('button', { name: '캐릭터 RESET', exact: true }).click();
@@ -2017,5 +2017,32 @@ test('web: character POWER follows the game formula and remains visible at every
     await row.click(); page.once('dialog', dialog => dialog.accept()); await modal.getByRole('button', { name: '캐릭터 RESET', exact: true }).click();
     await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await expect(cell).toHaveText(String(originalPower)); await expect(cell).not.toHaveClass(/character-cell-changed/);
+  } finally { await browser.close(); }
+});
+
+
+test('web: character scope filters allied troop membership and combines with modified-only', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage();
+  try {
+    const data = save(); data[0x59a6] = 0;
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'allied.dat', mimeType: 'application/octet-stream', buffer: data });
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    const scope = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
+    const rows = page.locator('.character-table tbody tr');
+    await expect(scope).toHaveValue('named');
+    await expect(scope.locator('option[value="allied"]')).toHaveText('아군부대 캐릭터만 보기 (4명)');
+    await scope.selectOption('allied');
+    await expect(rows.locator('td[data-column="ID"]')).toHaveText(['0', '220', '221', '639']);
+    await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    await modal.getByLabel('AT', { exact: true }).fill('10');
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true }).check();
+    await expect(rows.locator('td[data-column="ID"]')).toHaveText(['220*']);
+    await page.getByRole('button', { name: '개요', exact: true }).click();
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    await expect(scope).toHaveValue('allied'); await expect(rows).toHaveCount(1);
   } finally { await browser.close(); }
 });

@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { CharacterEditor } from './CharacterEditor';
 import { ClassImage } from './ClassImage';
 import { displayValues } from './character-display';
-import { characterPower, characterName, className, itemName, spellName, type Character } from '@fq4r-editor/save-core';
+import { characterPower, characterName, className, itemName, spellName, type Character, type Troop } from '@fq4r-editor/save-core';
+
+export type CharacterScope = 'named' | 'all' | 'allied';
 
 const columns = ['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL'];
 const green = new Set(['CLASS', 'HR', 'AR', 'DR', 'AA']);
@@ -11,22 +13,30 @@ function columnColor(column: string): string | undefined {
 }
 
 
-export function Characters({ characters, showNpc, onShowNpc, showModified, onShowModified, bytes, originalCharacters, onSave }: { characters: Character[]; showModified: boolean; onShowModified(value: boolean): void; showNpc: boolean; onShowNpc(value: boolean): void; bytes: Uint8Array; originalCharacters: Uint8Array; onSave(index: number, record: Uint8Array): void }) {
+export function Characters({ characters, troops, scope, onScope, showModified, onShowModified, bytes, originalCharacters, onSave }: { characters: Character[]; showModified: boolean; onShowModified(value: boolean): void; troops: Troop[]; scope: CharacterScope; onScope(value: CharacterScope): void; bytes: Uint8Array; originalCharacters: Uint8Array; onSave(index: number, record: Uint8Array): void }) {
   const [editing, setEditing] = useState<number | null>(null);
   // Reuse the original-file byte comparison for both filtering and ID markers.
   // 필터와 ID 표시는 최초 파일의 바이트를 비교하는 동일한 변경 기준을 사용합니다.
   const changedIndices = new Set(characters.filter(character => bytes.subarray(0x9a6 + character.index * 32, 0x9a6 + (character.index + 1) * 32)
     .some((byte, offset) => byte !== originalCharacters[character.index * 32 + offset])).map(character => character.index));
-  const npcCount = characters.filter(character => character.index < 220).length;
+  // Resolve membership from raw affiliation 00 and count each character only once.
+  // 원시 소속 00인 부대에서 부대원을 모으며 중복 캐릭터는 한 번만 셉니다.
+  const alliedIds = new Set(troops.filter(troop => troop.state === 0).flatMap(troop => troop.members));
+  const alliedCount = characters.filter(character => alliedIds.has(character.index)).length;
+  const namedCount = characters.filter(character => character.index >= 220).length;
   const hasModified = changedIndices.size > 0;
   const onlyModified = showModified && hasModified;
   useEffect(() => { if (!hasModified && showModified) onShowModified(false); }, [hasModified, showModified, onShowModified]);
-  const visibleCharacters = characters.filter(character => (showNpc || character.index >= 220) && (!onlyModified || changedIndices.has(character.index)));
+  const visibleCharacters = characters.filter(character => (scope === 'all' || (scope === 'allied' ? alliedIds.has(character.index) : character.index >= 220)) && (!onlyModified || changedIndices.has(character.index)));
   const editingPosition = visibleCharacters.findIndex(character => character.index === editing);
   const previous = visibleCharacters[editingPosition - 1]?.index;
   const next = visibleCharacters[editingPosition + 1]?.index;
   return <>
-    <div className="character-controls"><label htmlFor="show-npc"><input id="show-npc" aria-label="NPC 캐릭터 표시" type="checkbox" checked={showNpc} onChange={event => onShowNpc(event.target.checked)} />NPC 캐릭터 표시 <span className="character-filter-count">({npcCount}명)</span></label><label htmlFor="show-modified-characters"><input id="show-modified-characters" aria-label="수정한 캐릭터만 표시" type="checkbox" disabled={!hasModified} checked={onlyModified} onChange={event => onShowModified(event.target.checked)} />수정한 캐릭터만 표시 <span className="character-filter-count">({changedIndices.size}명)</span></label></div>
+    <div className="character-controls"><select aria-label="캐릭터 표시 범위" value={scope} onChange={event => onScope(event.target.value as CharacterScope)}>
+      <option value="named">네임드 캐릭터만 보기 ({namedCount}명)</option>
+      <option value="allied">아군부대 캐릭터만 보기 ({alliedCount}명)</option>
+      <option value="all">NPC 포함 전체 캐릭터 보기 ({characters.length}명)</option>
+    </select><label htmlFor="show-modified-characters"><input id="show-modified-characters" aria-label="수정한 캐릭터만 표시" type="checkbox" disabled={!hasModified} checked={onlyModified} onChange={event => onShowModified(event.target.checked)} />수정한 캐릭터만 표시 <span className="character-filter-count">({changedIndices.size}명)</span></label></div>
     <div className="table-scroll"><table className="character-table"><thead><tr>{columns.map(column => <th key={column} data-column={column} scope="col" className={columnColor(column)}>{column}</th>)}</tr></thead>
       <tbody>{visibleCharacters.map(character => {
         // Display the known HR/AD/MD conversions without changing stored raw bytes.
