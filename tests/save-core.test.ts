@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { parseSave, appendTroopMember, swapTroopMembers, replaceTroopMember, characterPower, applyTroopMacro, troopNationSuffix, troopAffiliationLabel, compareTroops, troopCountryName, troopCountryColor, readTroopRecords, editTroop, prepareSave, stepCharacterLevel, growCharacterTo99, syncCharacterPromotion, itemQualityScore, editCharacter, itemDescription, ITEM_OPTIONS, editInventory, editMagicLists, troopLocationName, troopNationLabel, troopPower, validateSave, inspectChecksums, repairChecksumBlock, editOverview, difficultyName, locationName, characterName, className, CHECKSUM_OFFSET, MAX_PLAY_MINUTES, MAX_GOLD, DIFFICULTIES } from '../packages/save-core/src/index.ts';
+import { classSkillAvailability, parseSave, appendTroopMember, swapTroopMembers, replaceTroopMember, characterPower, characterLevel99PowerRange, applyTroopMacro, troopNationSuffix, troopAffiliationLabel, compareTroops, troopCountryName, troopCountryColor, readTroopRecords, editTroop, prepareSave, stepCharacterLevel, growCharacterTo99, syncCharacterPromotion, itemQualityScore, editCharacter, itemDescription, ITEM_OPTIONS, editInventory, editMagicLists, troopLocationName, troopNationLabel, troopPower, validateSave, inspectChecksums, repairChecksumBlock, editOverview, difficultyName, locationName, characterName, className, CHECKSUM_OFFSET, MAX_PLAY_MINUTES, MAX_GOLD, DIFFICULTIES } from '../packages/save-core/src/index.ts';
 import { SaveFiles } from '../apps/desktop/src/save-files.ts';
 
 function fixture(flags = 0x58): Uint8Array {
@@ -884,4 +884,79 @@ test('Ares leader edits require explicit confirmation across swap, replacement, 
   assert.deepEqual(readTroopRecords(appendTroopMember(bytes, 0, { kind: 'member', ...leader }, options))[0].members, [221, 222, 220]);
   assert.deepEqual(readTroopRecords(editTroop(bytes, 0, { members: [221, 220, 222], allowAresMove: true }))[0].members, [221, 220, 222]);
   assert.deepEqual(bytes, snapshot);
+});
+
+
+test('LV99 POWER bounds equal exhaustive attainable outcomes and never mutate source', () => {
+  for (const item of [0, 0x2d]) for (const recovery of [0, 14, 15, 16, 31]) {
+    const data = fixture(); const offset = 0x9a6 + 220 * 32;
+    const record = new Uint8Array(32); record[24] = 96; record[25] = recovery;
+    record[12] = 0x89; record[21] = item; record[10] = 7;
+    record[26] = 0xdd; record[27] = 3; record.set([98, 80, 90, 60], 28);
+    const source = record.slice();
+    const power = (candidate: Uint8Array) => {
+      data.set(candidate, offset);
+      return characterPower({ ...parseSave(data).characters.find(c => c.index === 220)!, item: 0, fatigue: 0 });
+    };
+    let outcomes: Uint8Array[] = [record];
+    for (let level = 96; level < 99; level++) {
+      const next: Uint8Array[] = [];
+      for (const value of outcomes) for (const bonus of ((level & 15) === 0 ? [0, 1, 2, 3] : [0])) for (const hp of [0, 1, 2]) {
+        let calls = 0;
+        next.push(stepCharacterLevel(value, 1, () => (level & 15) === 0 && calls++ === 0 ? (bonus + 0.1) / 4 : (hp + 0.1) / 3));
+      }
+      outcomes = next;
+    }
+    data.set(record, offset);
+    const character = parseSave(data).characters.find(c => c.index === 220)!;
+    const result = characterLevel99PowerRange(character, record);
+    const bufferRecord = Buffer.from(record);
+    assert.deepEqual(characterLevel99PowerRange(character, bufferRecord), result);
+    assert.deepEqual(bufferRecord, Buffer.from(source));
+    const powers = outcomes.map(power);
+    assert.deepEqual({ min: result.min, max: result.max }, { min: Math.min(...powers), max: Math.max(...powers) });
+    const statValues = (candidate: Uint8Array): Record<string, number> => ({
+      LV: candidate[24], HP: candidate[26] | candidate[27] << 8, HR: (candidate[25] & 15) || 16,
+      AT: candidate[28], AR: candidate[29], DF: candidate[30], DR: candidate[31], AA: candidate[16],
+      AD: 30 - Math.min(candidate[17], 30), MD: 30 - Math.min(candidate[18], 30) });
+    for (const column of Object.keys(result.stats)) {
+      const values = outcomes.map(value => statValues(value)[column]);
+      assert.deepEqual(result.stats[column], { min: Math.min(...values), max: Math.max(...values) });
+    }
+    assert.deepEqual(record, source);
+    const differentEquipment = record.slice(); differentEquipment[21] = 0x20; differentEquipment[10] = 255;
+    assert.deepEqual(characterLevel99PowerRange({ ...character, item: 0x20, fatigue: 255 }, differentEquipment), result);
+  }
+});
+
+test('LV99 forecast handles full growth, already-max levels, caps, and promotion without automatic class changes', () => {
+  const data = fixture(); const offset = 0x9a6 + 220 * 32;
+  const record = new Uint8Array(32); record[12] = 0x54; record[25] = 15;
+  data.set(record, offset);
+  const character = parseSave(data).characters.find(c => c.index === 220)!;
+  const bounds = characterLevel99PowerRange(character, record);
+  for (let seed = 1; seed <= 20; seed++) {
+    let state = seed;
+    const grown = growCharacterTo99(record, () => { state = (state * 1664525 + 1013904223) >>> 0; return state / 0x100000000; });
+    assert.equal(grown[12], 0x54); assert.equal(grown[20], 0x56);
+    data.set(grown, offset);
+    const final = parseSave(data).characters.find(c => c.index === 220)!;
+    const power = characterPower({ ...final, item: 0, fatigue: 0 });
+    assert.ok(bounds.min <= power && power <= bounds.max);
+    const capped = characterLevel99PowerRange(final, grown);
+    assert.deepEqual({ min: capped.min, max: capped.max }, { min: power, max: power });
+  }
+  assert.throws(() => characterLevel99PowerRange(character, new Uint8Array(31)), /캐릭터/);
+});
+
+
+test('ranking skill availability uses class spell lists and mounted Ares alias', () => {
+  const lists = [{ classId: 6, spells: [6, 4] }, { classId: 1, spells: [15, 0] }, { classId: 2, spells: [0] }];
+  assert.equal(classSkillAvailability(6, lists), '소환');
+  assert.equal(classSkillAvailability(0xbf, lists), '소환');
+  assert.equal(classSkillAvailability(1, lists), '마법');
+  assert.equal(classSkillAvailability(2, lists), '-');
+  assert.equal(classSkillAvailability(3, lists), '-');
+  for (const id of [2, 3, 4, 5, 0x14]) assert.equal(classSkillAvailability(1, [{ classId: 1, spells: [id] }]), '소환');
+  assert.equal(classSkillAvailability(1, [{ classId: 1, spells: [0x25] }]), '마법');
 });

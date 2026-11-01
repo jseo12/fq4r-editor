@@ -9,6 +9,16 @@ import spells from './spells.json' with { type: 'json' };
 import characterNames from './character-names.json' with { type: 'json' };
 import classNames from './class-names.json' with { type: 'json' };
 
+/** Describe registered class skills, resolving the mounted Ares class to its spell list.
+ * 말아레스 직업의 목록 연결을 반영하여 직업에 등록된 스킬 사용 여부를 표시합니다. */
+export function classSkillAvailability(classId: number, lists: SpellList[]): string {
+  const key = classId === 0xbf ? 0x06 : classId;
+  const list = lists.find(list => list.classId === key);
+  const skills = list?.spells.filter(id => id !== 0) ?? [];
+  const summons = new Set([0x02, 0x03, 0x04, 0x05, 0x14]);
+  return skills.some(id => summons.has(id)) ? '소환' : skills.length ? '마법' : '-';
+}
+
 export const SAVE_SIZE = 0x8000;
 export const CHECKSUM_OFFSET = 0x7da6;
 export const FIXED_CHARACTER_COUNT = 529;
@@ -510,6 +520,50 @@ export function growCharacterTo99(record: Uint8Array, random: () => number = Mat
   let next: Uint8Array = record.slice();
   while (next[24] < 99) next = stepCharacterLevel(next, 1, random);
   return next;
+}
+
+
+export type StatRange = { min: number; max: number };
+export type Level99Forecast = StatRange & { stats: Record<string, StatRange> };
+
+/** Forecast level-99 base stats and POWER using the current class, without items or fatigue.
+ * 아이템·피로도를 제외하고 현재 직업으로 레벨 99의 기본 능력치와 POWER를 예측합니다.
+ * Each stat range is independently attainable, not a simultaneous all-max growth outcome.
+ * 각 능력치 범위는 개별적으로 도달 가능하며 모든 최대값을 동시에 얻는다는 의미는 아닙니다. */
+export function characterLevel99PowerRange(character: Character, record: Uint8Array): Level99Forecast {
+  if (record.length !== 32) throw new RangeError('캐릭터 레코드가 올바르지 않습니다.');
+  let minimum: Uint8Array = Uint8Array.from(record), maximum: Uint8Array = Uint8Array.from(record);
+  let recoveryValues = new Set([record[25]]);
+  let bonuses = 0;
+  while (minimum[24] < 99) {
+    const bonusLevel = (minimum[24] & 15) === 0;
+    if (bonusLevel) {
+      bonuses++;
+      recoveryValues = new Set([...recoveryValues].flatMap(value =>
+        (value & 15) !== 0 ? [value, (value + 1) & 15] : [value]));
+    }
+    minimum = stepCharacterLevel(minimum, 1, () => 0);
+    let calls = 0;
+    maximum = stepCharacterLevel(maximum, 1, () => bonusLevel && calls++ === 0 ? 0 : 0.999999);
+  }
+  const project = (grown: Uint8Array, recoveryRaw: number): Character => ({ ...character,
+    item: 0, fatigue: 0, level: grown[24], hp: grown[26] | grown[27] << 8, recoveryRaw,
+    attack: grown[28], hit: grown[29], defense: grown[30], evasion: grown[31] });
+  const fixed = (value: number): StatRange => ({ min: value, max: value });
+  const recovery = [...recoveryValues].map(value => (value & 15) || 16);
+  const penaltyRange = (offset: number): StatRange => ({
+    min: 30 - Math.min(record[offset], 30), max: 30 - Math.min(Math.max(0, record[offset] - bonuses), 30) });
+  return {
+    min: Math.min(...[...recoveryValues].map(hr => characterPower(project(minimum, hr)))),
+    max: Math.max(...[...recoveryValues].map(hr => characterPower(project(maximum, hr)))),
+    stats: {
+      LV: fixed(minimum[24]), HP: { min: minimum[26] | minimum[27] << 8, max: maximum[26] | maximum[27] << 8 },
+      HR: { min: Math.min(...recovery), max: Math.max(...recovery) },
+      AT: fixed(minimum[28]), AR: fixed(minimum[29]), DF: fixed(minimum[30]), DR: fixed(minimum[31]),
+      AA: { min: record[16], max: record[16] < 15 ? Math.min(15, record[16] + bonuses) : record[16] },
+      AD: penaltyRange(17), MD: penaltyRange(18)
+    }
+  };
 }
 
 

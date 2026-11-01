@@ -1,4 +1,4 @@
-import { validateSave, parseSave, characterPower, characterName, editTroop, spellName, applyTroopMacro } from '../../packages/save-core/src/index.ts';
+import { validateSave, parseSave, characterLevel99PowerRange, characterPower, characterName, editTroop, spellName, applyTroopMacro } from '../../packages/save-core/src/index.ts';
 import { test, expect, chromium, _electron as electron } from '@playwright/test';
 import { join, resolve } from 'node:path';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
@@ -2079,5 +2079,83 @@ test('web: character sorting respects filters, navigation, and toolbar alignment
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     await expect(sort).toHaveValue('power');
     await sort.selectOption('default'); await expect(ids).toHaveText(['0', '220', '221', '639']);
+  } finally { await browser.close(); }
+});
+
+
+test('web: ranking shows level99 bounds, ranks by maximum, and shares character filters', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1000 } });
+  try {
+    const data = save(); data[0x59a6] = 0;
+    data[0x9a6 + 220 * 32 + 24] = 98;
+    data.writeUInt16LE(200, 0x9a6 + 220 * 32 + 26);
+    data[0x9a6 + 221 * 32 + 24] = 99;
+    data.writeUInt16LE(900, 0x9a6 + 221 * 32 + 26);
+    data[0x9a6 + 220 * 32 + 12] = 6;
+    data.set([6, 1, 4, 0xff], 0x6e5);
+    data[0x9a6 + 220 * 32 + 21] = 0x2d; data[0x9a6 + 220 * 32 + 10] = 99;
+    const parsed = parseSave(data);
+    const expected = parsed.characters.filter(c => c.index >= 220).map(c => ({ id: c.index,
+      ...characterLevel99PowerRange(c, data.subarray(0x9a6 + c.index * 32, 0x9a6 + (c.index + 1) * 32)) })).sort((a, b) => b.max - a.max || a.id - b.id);
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'ranking.dat', mimeType: 'application/octet-stream', buffer: data });
+    await page.getByRole('button', { name: '파워랭킹', exact: true }).click();
+    const table = page.locator('.ranking-table'); const rows = table.locator('tbody tr');
+    await expect(table.locator('th[data-column="POWER"]')).toHaveAttribute('title', '현재 파워');
+    await expect(table.locator('th[data-column="Lv99 POWER"]')).toHaveAttribute('title', /아이템·피로도 제외/);
+    await expect(table.locator('th[data-column="SKILL"]')).toHaveAttribute('title', '현재 직업의 마법 스킬 사용 가능 여부');
+    await expect(rows.first().locator('td[data-column="SKILL"]')).toHaveText('마법');
+    const columns = ['RANK', 'ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'Lv99 POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'SKILL'];
+    await expect(table.locator('th')).toHaveText(columns);
+    await expect(rows.locator('td[data-column="ID"]')).toHaveText(expected.map(c => String(c.id)));
+    await expect(rows.locator('td[data-column="RANK"]')).toHaveText(expected.map((_, i) => String(i + 1)));
+    await expect(rows.locator('td[data-column="Lv99 POWER"]')).toHaveText(expected.map(c => `${c.min}~${c.max}`));
+    const ares = table.getByRole('row', { name: '아레스 편집', exact: true });
+    await expect(ares.locator('td[data-column="SKILL"]')).toHaveText('소환');
+    await expect(ares.locator('td[data-column="SKILL"]')).toHaveAttribute('title', /소환 마법 포함/);
+    await expect(rows.first().locator('td[data-column="SKILL"]')).toHaveAttribute('title', /소환 마법은 포함되어 있지 않습니다/);
+    const forecast = expected.find(c => c.id === 220)!;
+    for (const [column, range] of Object.entries(forecast.stats)) {
+      await expect(ares.locator(`td[data-column="${column}"]`)).toHaveText(range.min === range.max ? String(range.min) : `${range.min}~${range.max}`);
+    }
+    const current = parsed.characters.find(c => c.index === 220)!;
+    await expect(ares.locator('td[data-column="POWER"]')).toHaveText(String(characterPower({ ...current, item: 0, fatigue: 0 })));
+    for (const width of [1600, 1440, 1280, 1279, 1200, 1199, 1100, 1099, 960, 959, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const tabPositions = await page.getByRole('navigation', { name: '에디터 보기' }).getByRole('button').evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().top));
+      expect(new Set(tabPositions).size).toBe(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      const wanted = columns.filter(column =>
+        !(width < 1600 && column === 'SKILL') &&
+        !(width < 1280 && ['AA', 'AD', 'MD'].includes(column)) &&
+        !(width < 1200 && column === 'POWER') &&
+        !(width < 1100 && column === 'LV') &&
+        !(width < 960 && ['HP', 'HR', 'AT', 'AR', 'DF', 'DR'].includes(column)));
+      await expect(table.locator('th:visible')).toHaveText(wanted);
+      expect(await rows.first().locator('td:visible').evaluateAll(cells => cells.map(c => c.getAttribute('data-column')))).toEqual(wanted);
+    }
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    const scope = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
+    await scope.selectOption('allied'); await expect(rows).toHaveCount(4);
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await expect(scope).toHaveValue('allied');
+    await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    await modal.getByLabel('HP', { exact: true }).fill('999');
+    await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    await page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true }).check();
+    await page.getByRole('button', { name: '파워랭킹', exact: true }).click();
+    await expect(rows).toHaveCount(4);
+    await expect(rows.locator('[data-column="RANK"]')).toHaveText(['1', '2', '3', '4']);
+    await expect(page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true })).toHaveCount(0);
+    const edited = table.getByRole('row', { name: '아레스 편집', exact: true });
+    await expect(edited.locator('[data-column="ID"]')).toHaveText('220*');
+    await expect(edited.locator('[data-column="HP"]')).toHaveText('999');
+    await expect(edited.locator('[data-column="LV"]')).toHaveText('99');
+    await expect(page.getByRole('combobox', { name: '캐릭터 정렬', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    await expect(page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true })).toBeChecked();
+    await expect(page.locator('.character-table tbody tr')).toHaveCount(1);
+
   } finally { await browser.close(); }
 });

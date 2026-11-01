@@ -50,7 +50,7 @@ select { width: 100%; height: 34px; min-height: 0; padding: 0 12px; border: 1px 
 .notice { padding: 15px 18px; margin: 22px 0 0; background: var(--color-notice); border: 1px solid var(--color-notice-border); border-radius: 3px; font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
 .error { background: var(--color-error-surface); border-color: var(--color-error-border); }
 .validation-errors { margin-top: 22px; color: var(--color-warning-text); font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
-.editor-header nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 520px; gap: 7px; margin-top: 20px; padding: 0 0 12px; }
+.editor-header nav { display: grid; grid-template-columns: repeat(6, minmax(64px, 1fr)); min-width: 0; max-width: 600px; overflow-x: auto; scrollbar-width: none; gap: 7px; margin-top: 20px; padding: 0 0 12px; }
 nav button { min-width: 0; border: 1px solid var(--color-tab-border); background: transparent; color: var(--color-text-tab); padding: 10px 8px; white-space: nowrap; }
 nav button[aria-pressed='true'] { background: var(--color-accent-surface); border-color: var(--color-border-accent); color: var(--color-text); }
 .overview-list { list-style: none; margin: 22px 0 0; padding: 0 10px; }
@@ -592,3 +592,16 @@ html:has(.folder-list-content)::-webkit-scrollbar, body:has(.folder-list-content
 /* Keep character POWER visible at every responsive tier.
    캐릭터 POWER는 모든 반응형 구간에서 표시합니다. */
 .character-table :is(th, td)[data-column="POWER"] { min-width: 76px; }
+
+.editor-header nav::-webkit-scrollbar { display: none; }
+
+.ranking-description { margin-left: auto; color: var(--color-text-muted); font-size: 16px; }
+
+/* Prioritize projected POWER over current POWER and level on narrow ranking views.
+   좁은 파워랭킹 화면에서는 현재 POWER·LV보다 LV 99 예상 POWER를 우선합니다. */
+@media (width < 1200px) {
+  .ranking-table [data-column="POWER"] { display: none; }
+}
+@media (width < 1100px) {
+  .ranking-table [data-column="LV"] { display: none; }
+}
