@@ -7,7 +7,7 @@ import { SaveFiles } from './save-files.ts';
 
 let window: BrowserWindow | null = null;
 if (process.env.FQ4R_TEST_USER_DATA) app.setPath('userData', process.env.FQ4R_TEST_USER_DATA);
-app.setAppUserModelId('com.corpseplay.fq4r-editor');
+if (process.platform === 'win32') app.setAppUserModelId('com.corpseplay.fq4r-editor');
 
 app.whenReady().then(() => {
   const files = new SaveFiles(app.getPath('userData'));
@@ -33,7 +33,7 @@ app.whenReady().then(() => {
   }, 1000);
   app.once('before-quit', () => clearInterval(watchTimer));
   window = new BrowserWindow({ width: 1200, height: 850, minWidth: 720, minHeight: 580,
-    icon: join(__dirname, 'icon.ico'),
+    icon: join(__dirname, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     title: 'FQ4R Save Editor', backgroundColor: '#0E0D11',
     webPreferences: { preload: join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   window.removeMenu();

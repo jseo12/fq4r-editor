@@ -63,6 +63,9 @@ jobs:
           - arch: x86
             output: release/win-ia32-unpacked
             machine: 332
+          - arch: arm64
+            output: release/win-arm64-unpacked
+            machine: 43620
     runs-on: windows-latest
     timeout-minutes: 30
     env:
@@ -111,5 +114,118 @@ jobs:
         with:
           name: fq4r-editor-v${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}
           path: ${{ matrix.output }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  macos:
+    name: macOS ${{ matrix.arch }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            machine: x86_64
+          - arch: arm64
+            machine: arm64
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Package production macOS app
+        run: npm run package:desktop:mac:${{ matrix.arch }}
+      - name: Validate app and archive
+        shell: bash
+        env:
+          EXPECTED_ARCH: ${{ matrix.machine }}
+        run: |
+          app=$(find release -maxdepth 3 -type d -name '*.app' -print -quit)
+          test -n "$app"
+          executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
+          actual=$(lipo -archs "$app/Contents/MacOS/$executable")
+          test "$actual" = "$EXPECTED_ARCH"
+          version=$(node -p "require('./package.json').version")
+          unzip -t "release/fq4r-editor-v${version}-macos-${{ matrix.arch }}.zip"
+      - name: Read project version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      # Archive the app first so macOS executable permissions and symlinks survive upload.
+      # macOS 실행 권한과 심볼릭 링크를 보존하기 위해 앱을 먼저 압축합니다.
+      - name: Upload macOS app
+        uses: actions/upload-artifact@v6
+        with:
+          name: fq4r-editor-v${{ steps.version.outputs.version }}-macos-${{ matrix.arch }}
+          path: release/fq4r-editor-v${{ steps.version.outputs.version }}-macos-${{ matrix.arch }}.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+
+  linux:
+    name: Linux ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            machine: 62
+            elfClass: 2
+          - arch: arm64
+            machine: 183
+            elfClass: 2
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Package production Linux app
+        run: npm run package:desktop:linux:${{ matrix.arch }}
+      - name: Validate executable and archive
+        shell: bash
+        env:
+          EXPECTED_MACHINE: ${{ matrix.machine }}
+          EXPECTED_CLASS: ${{ matrix.elfClass }}
+        run: |
+          executable=$(find release -maxdepth 3 -type f -name fq4r-editor -print -quit)
+          test -n "$executable"
+          test -x "$executable"
+          node --input-type=module - "$executable" <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const bytes = readFileSync(process.argv[2]);
+          if (bytes.subarray(0, 4).toString('hex') !== '7f454c46' || bytes[5] !== 1 || bytes[4] !== Number(process.env.EXPECTED_CLASS) || bytes.readUInt16LE(18) !== Number(process.env.EXPECTED_MACHINE)) {
+            throw new Error('Packaged ELF architecture does not match the requested target.');
+          }
+          NODE
+          version=$(node -p "require('./package.json').version")
+          tar -tzf "release/fq4r-editor-v${version}-linux-${{ matrix.arch }}.tar.gz" > /dev/null
+      - name: Read project version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      # Tar preserves Linux executable permissions and symlinks inside the artifact.
+      # tar 파일로 Linux 실행 권한과 심볼릭 링크를 보존합니다.
+      - name: Upload Linux app
+        uses: actions/upload-artifact@v6
+        with:
+          name: fq4r-editor-v${{ steps.version.outputs.version }}-linux-${{ matrix.arch }}
+          path: release/fq4r-editor-v${{ steps.version.outputs.version }}-linux-${{ matrix.arch }}.tar.gz
+          compression-level: 0
           if-no-files-found: error
           retention-days: 14

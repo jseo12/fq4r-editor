@@ -7,7 +7,9 @@
   "version": "1.0.0",
   "main": "dist/main.cjs",
   "scripts": {
-    "package": "electron-builder --win --dir"
+    "package": "electron-builder --win --dir",
+    "package:mac": "electron-builder --mac zip",
+    "package:linux": "electron-builder --linux tar.gz"
   },
   "devDependencies": {
     "electron-builder": "26.18.0"
@@ -41,7 +43,20 @@
       "en-GB",
       "zh-CN",
       "zh-TW"
-    ]
+    ],
+    "mac": {
+      "target": "zip",
+      "icon": "../web/public/android-chrome-512x512.png",
+      "category": "public.app-category.utilities",
+      "artifactName": "fq4r-editor-v${version}-macos-${arch}.${ext}"
+    },
+    "linux": {
+      "target": "tar.gz",
+      "icon": "../web/public/android-chrome-512x512.png",
+      "category": "Utility",
+      "executableName": "fq4r-editor",
+      "artifactName": "fq4r-editor-v${version}-linux-${arch}.${ext}"
+    }
   },
   "type": "module"
 }

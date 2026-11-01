@@ -2,7 +2,7 @@
 
 FQ4R Save Editor **v1.0.0** — 퍼스트 퀸 4 Windows 리메이크판의 세이브 파일 에디터입니다.
 
-웹 브라우저와 Windows 데스크톱 앱을 지원합니다. 세이브 파일은 기기 안에서만 처리하며 서버로 전송하지 않습니다. DOS판 FQ4의 세이브 형식은 지원하지 않습니다.
+웹 브라우저와 Windows·macOS·Linux 데스크톱 앱을 대상으로 합니다. 세이브 파일은 기기 안에서만 처리하며 서버로 전송하지 않습니다. DOS판 FQ4의 세이브 형식은 지원하지 않습니다.
 
 ## 주요 기능
 
@@ -112,27 +112,60 @@ Windows에서 실행합니다.
 npm ci
 npm run package:desktop:x64   # 64비트
 npm run package:desktop:x86   # 32비트
-# 또는 두 버전을 모두 생성
+npm run package:desktop:arm64 # Windows ARM64
+# 또는 Windows 세 아키텍처를 모두 생성
 npm run package:desktop:all
 ```
 
 Electron 런타임 준비, 타입 검사, 웹·데스크톱 코드 빌드, electron-builder 패키징을 순서대로 수행합니다. 런타임과 패키징 구성 요소의 최초 준비에는 인터넷 연결이 필요할 수 있습니다.
 
-x64 결과는 **`release/win-unpacked/`**, x86 결과는 **`release/win-ia32-unpacked/`**입니다. 각 폴더의 실행 파일은 **`fq4r-editor.exe`**입니다. `package:desktop`은 기본적으로 x64를 만듭니다.
+x64 결과는 **`release/win-unpacked/`**, x86 결과는 **`release/win-ia32-unpacked/`**, arm64 결과는 **`release/win-arm64-unpacked/`**입니다. 각 폴더의 실행 파일은 **`fq4r-editor.exe`**입니다. `package:desktop`은 기본적으로 x64를 만듭니다.
 
-x64는 프로젝트의 Electron 45.1.0을 사용하고 x86만 Electron 43.8.4로 패키징합니다. Electron 44 이상은 공식 Windows ia32 바이너리를 제공하지 않으며, 마지막 32비트 지원 계열인 Electron 43의 지원 종료 예정은 2027년 1월입니다. [공식 안내](https://www.electronjs.org/blog/electron-43-0). 개발용 Electron 의존성은 변경하지 않습니다. EXE와 함께 DLL·리소스가 필요하므로 배포할 때는 **폴더 전체를 ZIP으로 압축**합니다. 사용자는 압축을 풀고 EXE를 실행하며 Node.js나 npm을 별도로 설치할 필요가 없습니다.
+x64·arm64는 프로젝트의 Electron 45.1.0을 사용하고 x86만 Electron 43.8.4로 패키징합니다. Electron 44 이상은 공식 Windows ia32 바이너리를 제공하지 않으며, 마지막 32비트 지원 계열인 Electron 43의 지원 종료 예정은 2027년 1월입니다. [공식 안내](https://www.electronjs.org/blog/electron-43-0). 개발용 Electron 의존성은 변경하지 않습니다. EXE와 함께 DLL·리소스가 필요하므로 배포할 때는 **폴더 전체를 ZIP으로 압축**합니다. 사용자는 압축을 풀고 EXE를 실행하며 Node.js나 npm을 별도로 설치할 필요가 없습니다.
 
 ```powershell
 Compress-Archive -Path .\release\win-unpacked\* -DestinationPath .\release\fq4r-editor-v1.0.0-windows-x64.zip -Force
 ```
 
-위 ZIP 이름은 x64 예시입니다. x86은 `win-ia32-unpacked` 폴더 전체를 `fq4r-editor-v1.0.0-windows-x86.zip`으로 압축합니다. 현재 설정은 앱 폴더 생성(`--dir`)이며 설치 프로그램이나 단일 실행 파일은 생성하지 않습니다.
+위 ZIP 이름은 x64 예시입니다. x86은 `win-ia32-unpacked` 폴더 전체를 `fq4r-editor-v1.0.0-windows-x86.zip`으로 압축합니다. Windows arm64는 `win-arm64-unpacked` 폴더 전체를 `fq4r-editor-v1.0.0-windows-arm64.zip`으로 압축합니다. 현재 설정은 앱 폴더 생성(`--dir`)이며 설치 프로그램이나 단일 실행 파일은 생성하지 않습니다.
 
 데스크톱 패키지의 Electron 언어 리소스는 한국어(`ko`), 일본어(`ja`), 영어(`en-US`, `en-GB`), 중국어(`zh-CN`, `zh-TW`)만 포함합니다. 이 설정은 Electron 시스템 문구용 리소스를 제한하며, 에디터 화면 자체의 다국어 번역 기능을 의미하지 않습니다. 그 외 Chromium 리소스·그래픽 DLL·라이선스 고지는 유지합니다.
 
 Windows 아이콘은 `apps/desktop/build/icon.ico`를 사용합니다. 실행 파일의 아이콘과 BrowserWindow의 창 아이콘에 함께 적용되며, `dev:desktop`에서도 같은 아이콘을 사용합니다. 변경 후에는 실행 중인 앱을 종료하고 다시 빌드·실행해주세요. EXE에 새 아이콘이 들어 있는데 탐색기에서만 예전 아이콘이 보이면, 다른 폴더에 복사해 확인하여 Windows 표시 캐시 문제인지 구분할 수 있습니다.
 
 `npm run build:desktop`은 Electron main/preload 코드만 빌드합니다. 배포 가능한 Windows 앱을 만들 때는 `npm run package:desktop`을 사용해야 웹 화면과 Electron 런타임까지 함께 포함됩니다.
+
+### macOS 데스크톱 배포용 빌드
+
+macOS에서 Node.js 24와 npm을 준비한 후 실행합니다. Windows에서 macOS 패키징을 검증할 수는 없으며 GitHub Actions의 macOS 러너에서도 빌드할 수 있습니다.
+
+```sh
+npm ci
+npm run package:desktop:mac:x64     # Intel Mac
+npm run package:desktop:mac:arm64   # Apple Silicon
+# 또는 두 아키텍처를 순차 빌드
+npm run package:desktop:mac:all
+```
+
+결과는 `release/fq4r-editor-v1.0.0-macos-x64.zip`, `release/fq4r-editor-v1.0.0-macos-arm64.zip`입니다. ZIP 안의 `.app`을 꺼내 Applications 폴더로 이동합니다. Intel과 Apple Silicon은 별도 패키지이며 Universal 바이너리는 아닙니다. Windows의 32비트 호환용 버전과 달리 양쪽 모두 프로젝트 기본 Electron 45.1.0을 사용합니다.
+
+macOS 아이콘은 기존 512px 아이콘에서 패키징 도구가 변환합니다. 현재 서명·Apple 공증 인증서는 설정하지 않았으므로, 배포한 앱을 실행할 때 Gatekeeper의 개발자 확인 경고가 나올 수 있습니다. 일반 배포용 서명·공증은 별도로 준비해야 합니다. 실제 macOS 실행은 macOS에서 추가 확인이 필요합니다.
+
+### Linux 데스크톱 배포용 빌드
+
+Linux에서 Node.js 24와 npm을 준비하여 실행합니다. x64와 arm64 모두 프로젝트 기본 Electron 45.1.0을 사용하며 armv7l 빌드는 제공하지 않습니다.
+
+```sh
+npm ci
+npm run package:desktop:linux:x64
+npm run package:desktop:linux:arm64
+# 두 아키텍처를 순차 빌드
+npm run package:desktop:linux:all
+```
+
+결과는 `release/fq4r-editor-v1.0.0-linux-x64.tar.gz`, `release/fq4r-editor-v1.0.0-linux-arm64.tar.gz`입니다. 실행 권한과 심볼릭 링크가 유지되도록 `tar -xzf 파일명.tar.gz`로 압축을 풀고 내부 `fq4r-editor` 실행 파일을 사용합니다. Node.js 설치는 필요 없지만 Linux의 GUI 환경과 Electron 런타임이 요구하는 시스템 라이브러리는 필요합니다. 모든 배포판·기기에서 실행을 검증한 것은 아니며, arm64 결과물은 해당 아키텍처의 기기에서 확인해야 합니다.
+
+현재 형식은 설치 프로그램이나 AppImage가 아닌 앱 폴더 전체를 담은 tar.gz입니다. GitHub Actions의 Ubuntu 러너에서도 두 아키텍처를 패키징하고 ELF 아키텍처와 압축 파일 무결성을 검사합니다. 이는 실제 GUI 실행 검증과는 별개입니다.
 
 ## GitHub Actions 자동 빌드
 
@@ -143,13 +176,18 @@ Windows 아이콘은 `apps/desktop/build/icon.ico`를 사용합니다. 실행 �
 - `main` 대상 Pull Request
 - GitHub의 **Actions → Build → Run workflow** 수동 실행
 
-Node.js 24로 타입 검사·단위 테스트를 수행하고 웹과 Windows x64·x86 앱을 각각 빌드합니다. 성공한 실행의 **Artifacts**에서 다음 파일을 내려받을 수 있습니다. 이름의 버전은 루트 `package.json`을 사용합니다.
+Node.js 24로 타입 검사·단위 테스트를 수행하고 웹·Windows x64/x86/arm64·macOS x64/arm64·Linux x64/arm64 앱을 각각 빌드합니다. 성공한 실행의 **Artifacts**에서 다음 파일을 내려받을 수 있습니다. 이름의 버전은 루트 `package.json`을 사용합니다.
 
 - `fq4r-editor-v1.0.0-web`: 정적 호스팅에 업로드할 웹 빌드 전체
 - `fq4r-editor-v1.0.0-windows-x64`: Windows 64비트 앱 전체
 - `fq4r-editor-v1.0.0-windows-x86`: Windows 32비트 앱 전체
+- `fq4r-editor-v1.0.0-windows-arm64`: Windows ARM64 앱 전체
+- `fq4r-editor-v1.0.0-macos-x64`: Intel Mac 배포용 ZIP
+- `fq4r-editor-v1.0.0-macos-arm64`: Apple Silicon 배포용 ZIP
+- `fq4r-editor-v1.0.0-linux-x64`: Linux x64 배포용 tar.gz
+- `fq4r-editor-v1.0.0-linux-arm64`: Linux arm64 배포용 tar.gz
 
-폴더를 직접 Artifact에 업로드하므로 다운로드한 ZIP 안에 ZIP이 중첩되지 않습니다. 보관 기간은 14일입니다. 웹 자동 배포나 GitHub Release 생성·첨부는 수행하지 않습니다. 실제 Electron 창과 브라우저 UI 테스트는 이 빌드 워크플로에 포함하지 않습니다.
+웹·Windows는 폴더를 직접 Artifact로 업로드하므로 ZIP이 중첩되지 않습니다. macOS는 앱의 실행 권한과 심볼릭 링크 보존을 위해 배포용 ZIP을 업로드합니다. 따라서 macOS Artifact ZIP 안에는 `.app`이 들어 있는 배포용 ZIP이 있으며, 실제 배포에는 안쪽 ZIP을 사용합니다. Linux Artifact도 권한·링크 보존을 위해 배포용 tar.gz를 포함하며 실제 배포에는 이 tar.gz를 사용합니다. 보관 기간은 14일입니다. 웹 자동 배포나 GitHub Release 생성·첨부는 수행하지 않습니다. 실제 Electron 창과 브라우저 UI 테스트는 이 빌드 워크플로에 포함하지 않습니다.
 
 ## 테스트
 

@@ -25,7 +25,14 @@
     "test:desktop": "node tools/test-desktop.mjs",
     "package:desktop:x64": "npm run setup:desktop && npm run build && npm run package -w @fq4r-editor/desktop -- --x64",
     "package:desktop:x86": "npm run build && npm run package -w @fq4r-editor/desktop -- --ia32 --config.electronVersion=43.8.4",
-    "package:desktop:all": "npm run package:desktop:x64 && npm run package:desktop:x86"
+    "package:desktop:all": "npm run package:desktop:x64 && npm run package:desktop:x86 && npm run package:desktop:arm64",
+    "package:desktop:mac:x64": "npm run build && npm run package:mac -w @fq4r-editor/desktop -- --x64",
+    "package:desktop:mac:arm64": "npm run build && npm run package:mac -w @fq4r-editor/desktop -- --arm64",
+    "package:desktop:mac:all": "npm run package:desktop:mac:x64 && npm run package:desktop:mac:arm64",
+    "package:desktop:linux:x64": "npm run build && npm run package:linux -w @fq4r-editor/desktop -- --x64",
+    "package:desktop:linux:arm64": "npm run build && npm run package:linux -w @fq4r-editor/desktop -- --arm64",
+    "package:desktop:linux:all": "npm run package:desktop:linux:x64 && npm run package:desktop:linux:arm64",
+    "package:desktop:arm64": "npm run build && npm run package -w @fq4r-editor/desktop -- --arm64"
   },
   "devDependencies": {
     "typescript": "5.9.3",

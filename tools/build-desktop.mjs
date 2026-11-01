@@ -9,3 +9,4 @@ await copyFile('apps/desktop/src/preload.cjs', 'apps/desktop/dist/preload.cjs');
 // Share the window icon in development and packaged builds.
 // 개발 실행과 패키징에서 같은 창 아이콘을 사용합니다.
 await copyFile('apps/desktop/build/icon.ico', 'apps/desktop/dist/icon.ico');
+await copyFile('apps/web/public/android-chrome-512x512.png', 'apps/desktop/dist/icon.png');
