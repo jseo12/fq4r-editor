@@ -4,6 +4,7 @@ import { ClassImage } from './ClassImage';
 import { displayValues } from './character-display';
 import { characterPower, characterName, className, itemName, spellName, type Character, type Troop } from '@fq4r-editor/save-core';
 
+export type CharacterSort = 'default' | 'name' | 'power';
 export type CharacterScope = 'named' | 'all' | 'allied';
 
 const columns = ['ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'FT', 'EL+', 'ITEM', 'SKILL'];
@@ -13,7 +14,7 @@ function columnColor(column: string): string | undefined {
 }
 
 
-export function Characters({ characters, troops, scope, onScope, showModified, onShowModified, bytes, originalCharacters, onSave }: { characters: Character[]; showModified: boolean; onShowModified(value: boolean): void; troops: Troop[]; scope: CharacterScope; onScope(value: CharacterScope): void; bytes: Uint8Array; originalCharacters: Uint8Array; onSave(index: number, record: Uint8Array): void }) {
+export function Characters({ characters, troops, scope, onScope, sort, onSort, showModified, onShowModified, bytes, originalCharacters, onSave }: { characters: Character[]; showModified: boolean; onShowModified(value: boolean): void; sort: CharacterSort; onSort(value: CharacterSort): void; troops: Troop[]; scope: CharacterScope; onScope(value: CharacterScope): void; bytes: Uint8Array; originalCharacters: Uint8Array; onSave(index: number, record: Uint8Array): void }) {
   const [editing, setEditing] = useState<number | null>(null);
   // Reuse the original-file byte comparison for both filtering and ID markers.
   // 필터와 ID 표시는 최초 파일의 바이트를 비교하는 동일한 변경 기준을 사용합니다.
@@ -28,6 +29,12 @@ export function Characters({ characters, troops, scope, onScope, showModified, o
   const onlyModified = showModified && hasModified;
   useEffect(() => { if (!hasModified && showModified) onShowModified(false); }, [hasModified, showModified, onShowModified]);
   const visibleCharacters = characters.filter(character => (scope === 'all' || (scope === 'allied' ? alliedIds.has(character.index) : character.index >= 220)) && (!onlyModified || changedIndices.has(character.index)));
+  // Sort a filtered copy only; stored character slots retain their original IDs.
+  // 필터된 복사본만 정렬하며 저장 데이터의 캐릭터 슬롯과 ID는 유지합니다.
+  const powers = new Map(visibleCharacters.map(character => [character.index, characterPower(character)]));
+  visibleCharacters.sort((a, b) => (sort === 'name'
+    ? characterName(a.nameId).localeCompare(characterName(b.nameId), 'ko')
+    : sort === 'power' ? powers.get(b.index)! - powers.get(a.index)! : 0) || a.index - b.index);
   const editingPosition = visibleCharacters.findIndex(character => character.index === editing);
   const previous = visibleCharacters[editingPosition - 1]?.index;
   const next = visibleCharacters[editingPosition + 1]?.index;
@@ -36,7 +43,11 @@ export function Characters({ characters, troops, scope, onScope, showModified, o
       <option value="named">네임드 캐릭터만 보기 ({namedCount}명)</option>
       <option value="allied">아군부대 캐릭터만 보기 ({alliedCount}명)</option>
       <option value="all">NPC 포함 전체 캐릭터 보기 ({characters.length}명)</option>
-    </select><label htmlFor="show-modified-characters"><input id="show-modified-characters" aria-label="수정한 캐릭터만 표시" type="checkbox" disabled={!hasModified} checked={onlyModified} onChange={event => onShowModified(event.target.checked)} />수정한 캐릭터만 표시 <span className="character-filter-count">({changedIndices.size}명)</span></label></div>
+    </select><label htmlFor="show-modified-characters"><input id="show-modified-characters" aria-label="수정한 캐릭터만 표시" type="checkbox" disabled={!hasModified} checked={onlyModified} onChange={event => onShowModified(event.target.checked)} />수정한 캐릭터만 표시 <span className="character-filter-count">({changedIndices.size}명)</span></label><select className="character-sort" aria-label="캐릭터 정렬" value={sort} onChange={event => onSort(event.target.value as CharacterSort)}>
+      <option value="default">기본정렬</option>
+      <option value="name">이름순 정렬</option>
+      <option value="power">POWER 높은순 정렬</option>
+    </select></div>
     <div className="table-scroll"><table className="character-table"><thead><tr>{columns.map(column => <th key={column} data-column={column} scope="col" className={columnColor(column)}>{column}</th>)}</tr></thead>
       <tbody>{visibleCharacters.map(character => {
         // Display the known HR/AD/MD conversions without changing stored raw bytes.

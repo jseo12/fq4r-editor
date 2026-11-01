@@ -7,7 +7,7 @@ import { parseSave, editTroop, swapTroopMembers, replaceTroopMember, appendTroop
 import './themes/index.css';
 import './styles.css';
 import { Overview } from './Overview';
-import { Characters, type CharacterScope } from './Characters';
+import { Characters, type CharacterSort, type CharacterScope } from './Characters';
 import { Troops } from './Troops';
 import { Magic } from './Magic';
 import { Inventory } from './Inventory';
@@ -33,6 +33,7 @@ function App() {
   const [externallyChanged, setExternallyChanged] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const [tab, setTab] = useState('overview');
+  const [characterSort, setCharacterSort] = useState<CharacterSort>('default');
   const [characterScope, setCharacterScope] = useState<CharacterScope>('named');
   const [showModifiedCharacters, setShowModifiedCharacters] = useState(false);
 
@@ -66,7 +67,7 @@ function App() {
   function showFile(name: string, bytes: Uint8Array, saveId?: string) {
     const save = parseSave(new Uint8Array(bytes));
     setSaveMessage(null);
-    setOpened({ name, save, saveId, bytes: new Uint8Array(bytes), originalBytes: bytes.slice(), troopOriginals: undefined, originalSummary: { ...save.summary }, originalCharacters: bytes.slice(0x9a6, 0x59a6), originalMagic: save.magic.map(list => ({ ...list, spells: [...list.spells] })), originalInventory: bytes.slice(0x492, 0x692), originalItemIdentification: bytes.slice(0x696, 0x6de) }); setTab('overview'); setCharacterScope('named'); setShowModifiedCharacters(false);
+    setOpened({ name, save, saveId, bytes: new Uint8Array(bytes), originalBytes: bytes.slice(), troopOriginals: undefined, originalSummary: { ...save.summary }, originalCharacters: bytes.slice(0x9a6, 0x59a6), originalMagic: save.magic.map(list => ({ ...list, spells: [...list.spells] })), originalInventory: bytes.slice(0x492, 0x692), originalItemIdentification: bytes.slice(0x696, 0x6de) }); setTab('overview'); setCharacterScope('named'); setCharacterSort('default'); setShowModifiedCharacters(false);
   }
   async function run(action: () => Promise<InputResult | null>, preserveFolder = false, previousFolder?: Folder) {
     const version = ++sequence.current;
@@ -331,7 +332,7 @@ function App() {
         {opened.save.warnings.map(warning => <p className="notice" key={warning}>{warning}</p>)}
         <section className="tab-panel" key={tab} aria-label="탭 내용" tabIndex={0}>
         {tab === 'overview' && <Overview originalSummary={opened.originalSummary} save={opened.save} onChange={changeOverview} onRepairChecksum={repairChecksum} />}
-        {tab === 'characters' && <Characters originalCharacters={opened.originalCharacters} bytes={opened.bytes} onSave={changeCharacter} characters={opened.save.characters} showModified={showModifiedCharacters} onShowModified={setShowModifiedCharacters} troops={opened.save.troops} scope={characterScope} onScope={setCharacterScope} />}
+        {tab === 'characters' && <Characters originalCharacters={opened.originalCharacters} bytes={opened.bytes} onSave={changeCharacter} characters={opened.save.characters} showModified={showModifiedCharacters} onShowModified={setShowModifiedCharacters} troops={opened.save.troops} scope={characterScope} onScope={setCharacterScope} sort={characterSort} onSort={setCharacterSort} />}
         {tab === 'inventory' && <Inventory originalInventory={opened.originalInventory} originalIdentification={opened.originalItemIdentification} items={opened.save.inventory} identification={opened.save.itemIdentifications} onChange={changeInventory} onReset={() => changeInventory({ type: 'restore', region: opened.originalInventory, identification: opened.originalItemIdentification })} />}
         {tab === 'troops' && <RosterCharacterEditor bytes={opened.bytes} originalBytes={opened.originalBytes} onChange={changeCharacter}><Troops troops={opened.save.troops} characters={opened.save.characters} bytes={opened.bytes} originalBytes={opened.originalBytes} originalRecords={opened.troopOriginals} onMacro={runTroopMacro} onSwap={swapMembers} onReplace={replaceMember} onAppend={appendMember} onChange={changeTroop} /></RosterCharacterEditor>}
         {tab === 'magic' && <Magic originalLists={opened.originalMagic} lists={opened.save.magic} onChange={changeMagic} onReset={resetMagic} />}

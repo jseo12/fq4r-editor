@@ -1,4 +1,4 @@
-import { validateSave, parseSave, characterPower, editTroop, spellName, applyTroopMacro } from '../../packages/save-core/src/index.ts';
+import { validateSave, parseSave, characterPower, characterName, editTroop, spellName, applyTroopMacro } from '../../packages/save-core/src/index.ts';
 import { test, expect, chromium, _electron as electron } from '@playwright/test';
 import { join, resolve } from 'node:path';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
@@ -2044,5 +2044,40 @@ test('web: character scope filters allied troop membership and combines with mod
     await page.getByRole('button', { name: '개요', exact: true }).click();
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     await expect(scope).toHaveValue('allied'); await expect(rows).toHaveCount(1);
+  } finally { await browser.close(); }
+});
+
+
+test('web: character sorting respects filters, navigation, and toolbar alignment', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+  try {
+    const data = save(); data[0x59a6] = 0;
+    data.writeUInt16LE(900, 0x9a6 + 221 * 32 + 26);
+    const characters = parseSave(data).characters.filter(c => [0, 220, 221, 639].includes(c.index));
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'sort.dat', mimeType: 'application/octet-stream', buffer: data });
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    const scope = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
+    const sort = page.getByRole('combobox', { name: '캐릭터 정렬', exact: true });
+    const ids = page.locator('.character-table tbody td[data-column="ID"]');
+    await scope.selectOption('allied');
+    await expect(ids).toHaveText(['0', '220', '221', '639']);
+    await sort.selectOption('name');
+    const named = [...characters].sort((a, b) => characterName(a.nameId).localeCompare(characterName(b.nameId), 'ko') || a.index - b.index);
+    await expect(ids).toHaveText(named.map(c => String(c.index)));
+    await sort.selectOption('power');
+    const powered = [...characters].sort((a, b) => characterPower(b) - characterPower(a) || a.index - b.index);
+    await expect(ids).toHaveText(powered.map(c => String(c.index)));
+    await page.locator('.character-table tbody tr').first().click();
+    const modal = page.getByRole('dialog', { name: `ID ${powered[0].index}`, exact: true });
+    await modal.getByRole('button', { name: '다음 캐릭터', exact: true }).click();
+    await page.getByRole('dialog', { name: `ID ${powered[1].index}`, exact: true }).getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
+    const bounds = await sort.boundingBox(); const toolbar = await page.locator('.character-controls').boundingBox();
+    expect(Math.abs(bounds!.x + bounds!.width - (toolbar!.x + toolbar!.width - 10))).toBeLessThan(2);
+    await page.getByRole('button', { name: '개요', exact: true }).click();
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    await expect(sort).toHaveValue('power');
+    await sort.selectOption('default'); await expect(ids).toHaveText(['0', '220', '221', '639']);
   } finally { await browser.close(); }
 });
