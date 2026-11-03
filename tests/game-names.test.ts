@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { locationName, troopLocationName, getLocationOptions, itemDescription, itemQualityScore, parseSave, characterName, className, itemName, spellName, getCharacterNameOptions, getClassOptions, getItemOptions, getSpellOptions, ITEM_OPTIONS } from '../packages/save-core/src/index.ts';
+import { troopCountryName, troopNationLabel, locationName, troopLocationName, getLocationOptions, itemDescription, itemQualityScore, parseSave, characterName, className, itemName, spellName, getCharacterNameOptions, getClassOptions, getItemOptions, getSpellOptions, ITEM_OPTIONS } from '../packages/save-core/src/index.ts';
 import { gameNameTable } from '../packages/save-core/src/game-names.ts';
 import { getLocale, setLocale } from '../packages/save-core/src/i18n.ts';
 
@@ -95,4 +95,23 @@ test('Japanese item descriptions retain both variants, numeric modifiers and lan
   const originalLocale = getLocale();
   try { setLocale('ja'); assert.deepEqual(ITEM_OPTIONS.map(option => itemQualityScore(option.id)), scores); }
   finally { setLocale(originalLocale); }
+});
+
+
+test('nation names use Japanese IDs and preserve Korean fallback and group masking', () => {
+  const previous = getLocale();
+  try {
+    const expected = ['カーリオン', 'バルシア', 'ヒュリア', 'ミュルトン', 'グレイス', 'レスター', 'サネット', 'リンカー', 'ゼム', 'ベニック', 'モロシア', 'ノーフォーク', 'エドウィン', 'マーシア', 'セバート', 'ベルダ', '中立国'];
+    assert.deepEqual(Object.values(gameNameTable('nations', 'ja')), expected);
+    setLocale('ja');
+    for (let id = 0; id < 16; id++) {
+      assert.equal(troopCountryName(id), expected[id]);
+      assert.equal(troopCountryName(0xa0 | id), expected[id]);
+    }
+    assert.equal(troopNationLabel(0), expected[0]);
+    assert.equal(troopNationLabel(1), expected[1]);
+    assert.equal(troopNationLabel(4), expected[16]);
+    assert.equal(troopCountryName(0, 'ko'), '카리온');
+    assert.equal(troopCountryName(0, 'en'), '카리온');
+  } finally { setLocale(previous); }
 });

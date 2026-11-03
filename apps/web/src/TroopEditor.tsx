@@ -16,7 +16,6 @@ function TroopNumber({ value, min = 0, max, label, onChange }: { value: number; 
 }
 
 const hex = (value: number, width = 2) => value.toString(16).toUpperCase().padStart(width, '0');
-const nations = Array.from({ length: 16 }, (_, id) => ({ id, name: troopCountryName(id) }));
 const activities = [{ id: 0, name: '활성 (00)' }, { id: 1, name: '출현 대기 (10)' }, { id: 3, name: '비활성부대 (30)' }, { id: 13, name: '양산형 원본 (D0)' }];
 const affiliations = [{ id: 0, name: '아군 (0)' }, { id: 1, name: '적군 (1)' }, { id: 4, name: '중립 (04)' }, { id: 5, name: '중립 (05)' }];
 
@@ -44,6 +43,7 @@ function TroopHex({ label, value, onChange }: { label: string; value: number; on
 /** Edit a saved troop immediately, preserving unknown header bytes and member order.
  * 미확인 헤더 바이트와 부대원 순서를 보존하면서 저장 부대를 즉시 편집합니다. */
 export function TroopEditor({ record, original, characters, onChange, onClose, troopRecords, onMacro, bytes, originalBytes, onSwap, onReplace, onAppend, initialTroopFilter, showInactiveTroops, originalTroopRecords }: { originalTroopRecords: TroopRecord[]; showInactiveTroops: boolean; initialTroopFilter: 'allies' | 'named' | 'all'; onAppend(targetIndex: number, source: TroopAppendSource, allowAresMove?: boolean): void; onReplace(slot: TroopMemberSlot, characterId: number, allowAresMove?: boolean): void; onSwap(from: TroopMemberSlot, to: TroopMemberSlot, allowAresMove?: boolean): void; bytes: Uint8Array; originalBytes: Uint8Array; onMacro(mode: TroopMacro): { index: number; id: number }; troopRecords: TroopRecord[]; record: TroopRecord; original: TroopRecord; characters: Character[]; onChange(change: TroopEdit): void; onClose(): void }) {
+  const nations = Array.from({ length: 16 }, (_, id) => ({ id, name: troopCountryName(id) }));
   const dialog = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState('');
   const [macroMessage, setMacroMessage] = useState('');

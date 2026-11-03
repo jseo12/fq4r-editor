@@ -2,7 +2,6 @@ import { gameName, gameNameTable, gameItemDescription } from './game-names.ts';
 import { getLocale, t, type Locale } from './i18n.ts';
 import itemDetails from './item-details.json' with { type: 'json' };
 import itemRanking from './item-ranking.json' with { type: 'json' };
-import nations from './nations.json' with { type: 'json' };
 import powerTables from './power-tables.json' with { type: 'json' };
 import items from './game-data/ko/items.json' with { type: 'json' };
 import spells from './game-data/ko/spells.json' with { type: 'json' };
@@ -43,10 +42,10 @@ export class SaveValidationError extends Error {}
  * This is a UI classification, not a full decoding of the game's nation/status flags.
  * 게임의 국가·상태 플래그 전체를 해석한 결과가 아닌 UI 표시 분류입니다. */
 export function troopNationLabel(state: number): string {
-  if (state === 0x00) return nations['0'];
-  if (state === 0x01) return nations['1'];
+  if (state === 0x00) return gameName('nations', 0)!;
+  if (state === 0x01) return gameName('nations', 1)!;
   if (state === 0xd1) return '양산형';
-  return '중립국';
+  return gameName('nations', 16)!;
 }
 
 /** Describe affiliation while keeping undecoded lifecycle codes visible.
@@ -80,8 +79,8 @@ export function compareTroops(a: Troop, b: Troop): number {
 
 /** Resolve the nation name from the low nibble of troop header +05.
  * 부대 헤더 +05의 하위 니블로 국가명을 조회합니다. */
-export function troopCountryName(group: number): string {
-  return (nations as Record<string, string>)[group & 0x0f];
+export function troopCountryName(group: number, locale: Locale = getLocale()): string {
+  return gameName('nations', group & 0x0f, locale)!;
 }
 
 /** Match the displayed country to its legend color using the same low nibble.

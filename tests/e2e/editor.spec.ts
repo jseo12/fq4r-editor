@@ -2385,8 +2385,15 @@ test('web: Japanese maps and item descriptions update overview, troops and map s
     await page.getByRole('button', { name: '部隊', exact: true }).click();
     const row = page.getByRole('row', { name: '部隊8を編集', exact: true });
     await expect(row.locator('[data-column="MAP-NAME"]')).toHaveText('リンカーの町');
+    await expect(row.locator('[data-column="NATION"]')).toContainText('カーリオン');
     await row.click();
     const troop = page.getByRole('dialog', { name: '部隊編集', exact: true });
+    const nation = troop.getByRole('combobox', { name: '国家', exact: true });
+    await expect(nation.locator('option[value="0"]')).toHaveText('カーリオン');
+    await page.locator('.language-select select').selectOption('ko');
+    await expect(page.getByRole('dialog', { name: '부대 편집', exact: true }).getByRole('combobox', { name: '국가', exact: true }).locator('option[value="0"]')).toHaveText('카리온');
+    await page.locator('.language-select select').selectOption('ja');
+    await expect(nation.locator('option[value="0"]')).toHaveText('カーリオン');
     const map = troop.getByRole('combobox', { name: 'MAP-NAME', exact: true });
     await expect(map).toHaveValue('256');
     await expect(map.locator('option[value="256"]')).toHaveText('リンカーの町 (0x0100)');

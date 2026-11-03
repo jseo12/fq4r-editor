@@ -1,3 +1,5 @@
+import koNations from './game-data/ko/nations.json' with { type: 'json' };
+import jaNations from './game-data/ja/nations.json' with { type: 'json' };
 import koLocations from './game-data/ko/locations.json' with { type: 'json' };
 import koInternalLocations from './game-data/ko/internal-locations.json' with { type: 'json' };
 import koItemDescriptions from './game-data/ko/item-descriptions.json' with { type: 'json' };
@@ -14,11 +16,11 @@ import jaItems from './game-data/ja/items.json' with { type: 'json' };
 import jaSpells from './game-data/ja/spells.json' with { type: 'json' };
 import { getLocale, type Locale } from './i18n.ts';
 
-export type GameNameKind = 'characters' | 'classes' | 'items' | 'spells' | 'locations' | 'internalLocations';
+export type GameNameKind = 'characters' | 'classes' | 'items' | 'spells' | 'locations' | 'internalLocations' | 'nations';
 export type GameNameTable = Record<string, string | null>;
 const catalogs: Record<'ko' | 'ja', Record<GameNameKind, GameNameTable>> = {
-  ko: { characters: koCharacters, classes: koClasses, items: koItems, spells: koSpells, locations: koLocations, internalLocations: koInternalLocations },
-  ja: { characters: jaCharacters, classes: jaClasses, items: jaItems, spells: jaSpells, locations: jaLocations, internalLocations: jaInternalLocations }
+  ko: { nations: koNations, characters: koCharacters, classes: koClasses, items: koItems, spells: koSpells, locations: koLocations, internalLocations: koInternalLocations },
+  ja: { nations: jaNations, characters: jaCharacters, classes: jaClasses, items: jaItems, spells: jaSpells, locations: jaLocations, internalLocations: jaInternalLocations }
 };
 
 /** Select ID-keyed game names; English currently uses the Korean catalog.
