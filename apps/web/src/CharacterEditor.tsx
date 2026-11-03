@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { CHARACTER_NAME_OPTIONS, CLASS_OPTIONS, ITEM_OPTIONS, SPELL_OPTIONS, LOCATION_OPTIONS, syncCharacterPromotion, stepCharacterLevel, growCharacterTo99 } from '@fq4r-editor/save-core';
 import { ClassSelect } from './ClassSelect';
@@ -107,55 +108,55 @@ export function CharacterEditor({ index, record, resetRecord, onClose, onChange,
         <div className="character-dialog-navigation">
           <h2 id="character-editor-title">ID {index}</h2>
           <div className="character-navigation-buttons">
-            <button type="button" aria-label="이전 캐릭터" disabled={!onPrevious} onClick={onPrevious}>←</button>
-            <button type="button" aria-label="다음 캐릭터" disabled={!onNext} onClick={onNext}>→</button>
+            <button type="button" aria-label={t("이전 캐릭터")} disabled={!onPrevious} onClick={onPrevious}>←</button>
+            <button type="button" aria-label={t("다음 캐릭터")} disabled={!onNext} onClick={onNext}>→</button>
           </div>
         </div>
-        <div className="character-hex-scroll" aria-label="캐릭터 레코드 HEX" tabIndex={0}>
-          <div className="character-hex-grid character-hex-labels" aria-hidden="true">{hexLabels.map((label, i) => <span key={i} style={{ gridColumn: `span ${label.size}` }}>{label.code}</span>)}</div>
+        <div className="character-hex-scroll" aria-label={t("캐릭터 레코드 HEX")} tabIndex={0}>
+          <div className="character-hex-grid character-hex-labels" aria-hidden="true">{hexLabels.map((label, i) => <span key={i} style={{ gridColumn: `span ${label.size}` }}>{t(label.code)}</span>)}</div>
           <div className="character-hex-grid">{Array.from(latestRecord.current, (byte, offset) => <span key={offset} data-offset={offset}
-            className={`record-hex-byte${byte !== resetRecord[offset] ? ' changed' : ''}`} title={`+${offset.toString(16).toUpperCase().padStart(2, '0')}: 0x${byte.toString(16).toUpperCase().padStart(2, '0')}`}>
-            {byte.toString(16).toUpperCase().padStart(2, '0')}
+            className={`record-hex-byte${byte !== resetRecord[offset] ? ' changed' : ''}`} title={t(`+${offset.toString(16).toUpperCase().padStart(2, '0')}: 0x${byte.toString(16).toUpperCase().padStart(2, '0')}`)}>
+            {t(byte.toString(16).toUpperCase().padStart(2, '0'))}
           </span>)}</div>
         </div>
         <div className="character-dialog-actions">
-          <button type="button" aria-label="캐릭터 RESET" onClick={() => {
-            if (!window.confirm('이 캐릭터의 모든 데이터를 세이브 파일을 처음 불러왔을 때의 값으로 복원할까요?')) return;
+          <button type="button" aria-label={t("캐릭터 RESET")} onClick={() => {
+            if (!window.confirm(t('이 캐릭터의 모든 데이터를 세이브 파일을 처음 불러왔을 때의 값으로 복원할까요?'))) return;
             const restored = resetRecord.slice();
             commitRecord(restored);
           }}>RESET</button>
-          <button type="button" className="dialog-close" aria-label="캐릭터 편집 닫기" onClick={onClose}>×</button>
+          <button type="button" className="dialog-close" aria-label={t("캐릭터 편집 닫기")} onClick={onClose}>×</button>
         </div>
       </header>
       <div className="character-dialog-body">
-        {groups.map(group => <fieldset key={group.title}><legend>{group.title}</legend><div className="character-field-grid">{group.fields.map(field => {
+        {groups.map(group => <fieldset key={group.title}><legend>{t(group.title)}</legend><div className="character-field-grid">{group.fields.map(field => {
           const id = `character-field-${field.offset}`;
           const current = Number(values[field.offset]);
           // Compare stored bytes against the file baseline, including paired 16-bit fields.
           // 16비트 필드의 두 바이트를 포함하여 최초 파일값과 저장 바이트를 비교합니다.
           const changed = Array.from({ length: field.size }, (_, i) => field.offset + i).some(offset => latestRecord.current[offset] !== resetRecord[offset]);
           return <div className={`character-field${field.bits ? ' character-field-bits' : ''}${changed ? ' character-field-changed' : ''}`} key={field.offset}>
-            {field.bits ? <span className="character-field-label"><span className={`character-field-label-row${field.offset === 8 ? ' character-element-label-row' : ''}`}><span id={`${id}-label`}>{field.label}</span>{field.offset === 8 && <span className="character-element-actions"><button type="button" className="character-element-max" onClick={() => changeValue(field, String(latestRecord.current[8] & 0x0f))}>모든 속성 해제</button><button type="button" className="character-element-max" aria-label="모든 속성 강화" onClick={() => changeValue(field, String(latestRecord.current[8] | 0xf0))}>모든 속성 강화</button></span>}</span><small className="character-field-code" aria-hidden="true">{fieldCode(field)} · +{field.offset.toString(16).toUpperCase().padStart(2, '0')}</small></span> : <label htmlFor={id}>{field.label}<small>{fieldCode(field)} · +{field.offset.toString(16).toUpperCase().padStart(2, '0')} · u{field.size * 8}</small></label>}
-            {field.bits ? <div className={`character-bit-options${field.offset === 9 || field.offset === 13 ? ' character-bit-options-labeled' : ''}`} role="group" aria-labelledby={`${id}-label`}>{field.bits.map(bit => <label key={bit.mask} title={bit.hint} className={((latestRecord.current[field.offset] ^ resetRecord[field.offset]) & bit.mask) !== 0 ? 'character-flag-changed' : undefined}>
-              <input type="checkbox" checked={(current & bit.mask) !== 0} onChange={event => changeValue(field, String(event.target.checked ? latestRecord.current[field.offset] | bit.mask : latestRecord.current[field.offset] & ~bit.mask))} />{bit.name}
-            </label>)}</div> : field.offset === 12 || field.offset === 20 ? <ClassSelect id={id} label={field.label} value={current} onChange={value => changeValue(field, String(value))} /> : field.options ? <select id={id} aria-label={field.label} value={values[field.offset]} onChange={event => changeValue(field, event.target.value)}>
-              {!field.options.some(option => option.id === current) && <option value={current}>{field.offset === 14 ? `미확인 지역 (0x${current.toString(16).toUpperCase().padStart(4, '0')})` : `미확인 ID ${current}`}</option>}
+            {field.bits ? <span className="character-field-label"><span className={`character-field-label-row${field.offset === 8 ? ' character-element-label-row' : ''}`}><span id={`${id}-label`}>{t(field.label)}</span>{field.offset === 8 && <span className="character-element-actions"><button type="button" className="character-element-max" onClick={() => changeValue(field, String(latestRecord.current[8] & 0x0f))}>{t("모든 속성 해제")}</button><button type="button" className="character-element-max" aria-label={t("모든 속성 강화")} onClick={() => changeValue(field, String(latestRecord.current[8] | 0xf0))}>{t("모든 속성 강화")}</button></span>}</span><small className="character-field-code" aria-hidden="true">{t(fieldCode(field))} · +{t(field.offset.toString(16).toUpperCase().padStart(2, '0'))}</small></span> : <label htmlFor={id}>{t(field.label)}<small>{t(fieldCode(field))} · +{t(field.offset.toString(16).toUpperCase().padStart(2, '0'))} · u{field.size * 8}</small></label>}
+            {field.bits ? <div className={`character-bit-options${field.offset === 9 || field.offset === 13 ? ' character-bit-options-labeled' : ''}`} role="group" aria-labelledby={`${id}-label`}>{field.bits.map(bit => <label key={bit.mask} title={t(bit.hint)} className={((latestRecord.current[field.offset] ^ resetRecord[field.offset]) & bit.mask) !== 0 ? 'character-flag-changed' : undefined}>
+              <input type="checkbox" checked={(current & bit.mask) !== 0} onChange={event => changeValue(field, String(event.target.checked ? latestRecord.current[field.offset] | bit.mask : latestRecord.current[field.offset] & ~bit.mask))} />{t(bit.name)}
+            </label>)}</div> : field.offset === 12 || field.offset === 20 ? <ClassSelect id={id} label={field.label} value={current} onChange={value => changeValue(field, String(value))} /> : field.options ? <select id={id} aria-label={t(field.label)} value={values[field.offset]} onChange={event => changeValue(field, event.target.value)}>
+              {!field.options.some(option => option.id === current) && <option value={current}>{t(field.offset === 14 ? `미확인 지역 (0x${current.toString(16).toUpperCase().padStart(4, '0')})` : `미확인 ID ${current}`)}</option>}
               {field.offset === 14 ? ['외부 맵', '내부 맵'].map((label, group) => <optgroup key={label} label={label}>
-                {field.options!.filter(option => option.id >>> 8 === group).map(option => <option key={option.id} value={option.id}>{option.name} (0x{option.id.toString(16).toUpperCase().padStart(4, '0')})</option>)}
-              </optgroup>) : field.options.map(option => <option key={option.id} value={option.id}>{option.name} ({option.id})</option>)}
-            </select> : <div className="character-number-control"><input id={id} aria-label={field.label} type="number" inputMode="numeric" min={0} max={maximum(field)} step={1} required value={values[field.offset]}
+                {field.options!.filter(option => option.id >>> 8 === group).map(option => <option key={option.id} value={option.id}>{t(option.name)} (0x{t(option.id.toString(16).toUpperCase().padStart(4, '0'))})</option>)}
+              </optgroup>) : field.options.map(option => <option key={option.id} value={option.id}>{t(option.name)} ({option.id})</option>)}
+            </select> : <div className="character-number-control"><input id={id} aria-label={t(field.label)} type="number" inputMode="numeric" min={0} max={maximum(field)} step={1} required value={values[field.offset]}
               aria-invalid={!valid(values[field.offset], field)} onChange={event => changeValue(field, event.target.value)}
               onBlur={() => { if (!valid(values[field.offset], field)) setValues(previous => ({ ...previous, [field.offset]: String(initialValue(latestRecord.current, field)) })); }}
               onKeyDown={event => { if (['e', 'E', '+', '-', '.', ','].includes(event.key)) event.preventDefault(); }} />
-              {maxButtonOffsets.has(field.offset) && <button type="button" className="character-max-button" aria-label={`${field.label} MAX`} onClick={() => changeValue(field, String(maximum(field)))}>MAX</button>}
+              {maxButtonOffsets.has(field.offset) && <button type="button" className="character-max-button" aria-label={t(`${field.label} MAX`)} onClick={() => changeValue(field, String(maximum(field)))}>MAX</button>}
               {field.offset === 10 && <button type="button" className="character-max-button" aria-label="FT ZERO" onClick={() => changeValue(field, '0')}>ZERO</button>}
             </div>}
 
-            {field.hint && <small className="character-field-hint">{field.hint}</small>}
+            {t(field.hint && <small className="character-field-hint">{t(field.hint)}</small>)}
           </div>;
         })}{group.title === '기본 능력치' && <div className="character-field character-field-macros" role="group" aria-labelledby="character-stat-macro-label">
-          <span className="character-field-label" id="character-stat-macro-label">능력치 매크로</span>
-          <div className="character-stat-macros"><button type="button" disabled={Number(values[24]) === 0 || Number(values[24]) > 99} title="게임 성장식을 역방향으로 적용합니다. HP·추가 성장은 무작위 차감이며 과거 값의 정확한 복원은 아닙니다." onClick={() => commitRecord(stepCharacterLevel(latestRecord.current, -1))}>LV-1</button><button type="button" disabled={Number(values[24]) >= 99} title="현재 레벨에서 게임의 레벨업 공식을 1회 적용합니다. HP는 4~6 증가하며 능력치 성장과 전직 조건도 반영됩니다." onClick={() => commitRecord(stepCharacterLevel(latestRecord.current, 1))}>LV+1</button><button type="button" disabled={Number(values[24]) >= 99} title="현재 레벨부터 99까지 LV+1을 반복 적용합니다. 단계별 무작위 성장과 전직 조건을 반영하며, 능력치를 최대값으로 설정하는 기능은 아닙니다." onClick={() => commitRecord(growCharacterTo99(latestRecord.current))}>LV 99</button><button type="button" onClick={() => applyStatMacro(false)}>모두 MAX</button><button type="button" onClick={() => applyStatMacro(true)}>모두 랜덤</button></div>
+          <span className="character-field-label" id="character-stat-macro-label">{t("능력치 매크로")}</span>
+          <div className="character-stat-macros"><button type="button" disabled={Number(values[24]) === 0 || Number(values[24]) > 99} title={t("게임 성장식을 역방향으로 적용합니다. HP·추가 성장은 무작위 차감이며 과거 값의 정확한 복원은 아닙니다.")} onClick={() => commitRecord(stepCharacterLevel(latestRecord.current, -1))}>LV-1</button><button type="button" disabled={Number(values[24]) >= 99} title={t("현재 레벨에서 게임의 레벨업 공식을 1회 적용합니다. HP는 4~6 증가하며 능력치 성장과 전직 조건도 반영됩니다.")} onClick={() => commitRecord(stepCharacterLevel(latestRecord.current, 1))}>LV+1</button><button type="button" disabled={Number(values[24]) >= 99} title={t("현재 레벨부터 99까지 LV+1을 반복 적용합니다. 단계별 무작위 성장과 전직 조건을 반영하며, 능력치를 최대값으로 설정하는 기능은 아닙니다.")} onClick={() => commitRecord(growCharacterTo99(latestRecord.current))}>LV 99</button><button type="button" onClick={() => applyStatMacro(false)}>{t("모두 MAX")}</button><button type="button" onClick={() => applyStatMacro(true)}>{t("모두 랜덤")}</button></div>
         </div>}</div></fieldset>)}
       </div>
     </form>

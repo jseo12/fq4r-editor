@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { RosterCharacterContext } from './RosterCharacterEditor';
 import { troopHasChanges } from './troop-changes';
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type HTMLAttributes } from 'react';
@@ -60,9 +61,9 @@ function MemberTable({ record, originalRecord, characters, bytes, originalBytes,
   const bonus = record.header[0] === 0 ? 0 : record.header[3] * 6;
   const newEndpoint: NewEndpoint = { kind: 'new', troopIndex: record.index };
   const showNew = record.index >= 0 && record.members.length < MAX_TROOP_MEMBERS;
-  return <div className="roster-responsive"><div className="roster-scroll"><table className="roster-stats-table" aria-label={label}>
+  return <div className="roster-responsive"><div className="roster-scroll"><table className="roster-stats-table" aria-label={t(label)}>
     <colgroup>{memberColumns.map(column => <col key={column} data-column={column} />)}</colgroup>
-    <thead><tr>{memberColumns.map(column => <th scope="col" key={column} data-column={column} className={green.has(column) ? 'stat-green' : column === 'LV' ? 'stat-cyan' : undefined}>{column}</th>)}</tr></thead>
+    <thead><tr>{memberColumns.map(column => <th scope="col" key={column} data-column={column} className={green.has(column) ? 'stat-green' : column === 'LV' ? 'stat-cyan' : undefined}>{t(column)}</th>)}</tr></thead>
     <tbody>{record.members.map((index, position) => {
       const character = characters.get(index);
       const offset = 0x9a6 + index * 32;
@@ -99,7 +100,7 @@ function MemberTable({ record, originalRecord, characters, bytes, originalBytes,
         onDrop: event => { event.preventDefault(); event.stopPropagation(); interaction.endDrag(); },
         onDragEnd: () => interaction.endDrag(),
       } : {};
-      if (!character) return <tr key={position} {...rowProps}>{memberColumns.map(column => <td key={column} data-column={column}>{column === 'NO' ? `${position + 1}${rowChanged ? '*' : ''}` : column === 'ID' ? index : column === 'NAME' ? '(캐릭터 미확인)' : '—'}</td>)}</tr>;
+      if (!character) return <tr key={position} {...rowProps}>{memberColumns.map(column => <td key={column} data-column={column}>{t(column === 'NO' ? `${position + 1}${rowChanged ? '*' : ''}` : column === 'ID' ? index : column === 'NAME' ? '(캐릭터 미확인)' : '—')}</td>)}</tr>;
       const currentValues = displayValues(current), originalValues = displayValues(original);
       const originalPower = characterPower({ ...character, classId: original[12], item: original[21], fatigue: original[10], recoveryRaw: original[25],
         hp: original[26] | original[27] << 8, attack: original[28], hit: original[29], defense: original[30], evasion: original[31] }) + bonus;
@@ -109,15 +110,15 @@ function MemberTable({ record, originalRecord, characters, bytes, originalBytes,
         const empty = column === 'NAME' && character.nameId === 0 || column === 'ITEM' && character.item === 0 || column === 'SKILL' && character.skill === 0;
         const classes = [green.has(column) ? 'stat-green' : column === 'LV' ? 'stat-cyan' : '', empty ? 'empty-value' : '', changed ? 'character-cell-changed' : ''].filter(Boolean).join(' ');
         const title = column === 'NAME' ? `${characterName(character.nameId)} · ${className(character.classId)}` : column === 'POWER' ? `개별 POWER${bonus ? ` (부대 강화 가산 +${bonus})` : ''}` : column === 'ITEM' ? itemName(character.item) : column === 'SKILL' ? spellName(character.skill) : undefined;
-        return <td key={column} data-column={column} className={classes} title={title}>{column === 'NAME' ? <span className="roster-character-name"><ClassImage classId={character.classId} /><span>{characterName(character.nameId)}</span></span> : values[column]}</td>;
+        return <td key={column} data-column={column} className={classes} title={t(title)}>{t(column === 'NAME' ? <span className="roster-character-name"><ClassImage classId={character.classId} /><span>{t(characterName(character.nameId))}</span></span> : values[column])}</td>;
       })}</tr>;
     })}</tbody>
-    {showNew && <tfoot><tr className="roster-member-row roster-new-row" tabIndex={0} aria-label={`${label} NEW 선택`} aria-selected={sameEndpoint(interaction?.selected ?? null, newEndpoint)}
+    {showNew && <tfoot><tr className="roster-member-row roster-new-row" tabIndex={0} aria-label={t(`${label} NEW 선택`)} aria-selected={sameEndpoint(interaction?.selected ?? null, newEndpoint)}
       onClick={() => interaction?.select(newEndpoint)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); interaction?.select(newEndpoint); } }}
       onDragOver={event => interaction?.dragOver(event, newEndpoint)} onDrop={event => { event.preventDefault(); event.stopPropagation(); interaction?.endDrag(); }}>
-      {memberColumns.map(column => <td key={column} data-column={column}>{column === 'NAME' ? 'NEW' : column === 'NO' ? record.members.length + 1 : ''}</td>)}
+      {memberColumns.map(column => <td key={column} data-column={column}>{t(column === 'NAME' ? 'NEW' : column === 'NO' ? record.members.length + 1 : '')}</td>)}
     </tr></tfoot>}
-  </table>{record.members.length === 0 && <p className="inventory-empty">부대원이 없습니다.</p>}</div></div>;
+  </table>{record.members.length === 0 && <p className="inventory-empty">{t("부대원이 없습니다.")}</p>}</div></div>;
 }
 
 type TroopViewMode = 'allies' | 'named' | 'all';
@@ -152,34 +153,34 @@ function ComparisonPane({ number, hidden, troopRecords, characters, bytes, origi
     .map(character => character.index).sort((a, b) => a - b) : [], [characters, alliedMembers, mode, characterMode]);
   const characterRecord: TroopRecord = { index: -1, offset: 0, header: new Uint8Array(16), members: characterMembers };
   const legend = characterMode ? `${characterViews.find(view => view.id === mode)?.label} · ${characterMembers.length}명` : secondTroop && second ? `NO ${secondTroop.state === 0 ? secondTroop.id + 1 : secondTroop.id} · ${leaderName(secondTroop, characters)} · ${second.members.length}명` : title;
-  return <section className="comparison-pane" role="group" aria-label={title} hidden={hidden}>
+  return <section className="comparison-pane" role="group" aria-label={t(title)} hidden={hidden}>
     <div className="comparison-toolbar" style={{ gridColumn: number }} hidden={hidden}>
-      <select aria-label={`${title} 부대 필터`} value={characterMode ? '' : mode} onChange={event => { setMode(event.target.value as TroopViewMode); setSelected(null); }}>
-        <option value="" disabled>부대 목록</option>{troopViews.map(view => <option key={view.id} value={view.id}>{view.label}</option>)}
+      <select aria-label={t(`${title} 부대 필터`)} value={characterMode ? '' : mode} onChange={event => { setMode(event.target.value as TroopViewMode); setSelected(null); }}>
+        <option value="" disabled>{t("부대 목록")}</option>{troopViews.map(view => <option key={view.id} value={view.id}>{t(view.label)}</option>)}
       </select>
-      <select aria-label={`${title} 캐릭터 필터`} value={characterMode ? mode : ''} onChange={event => { setMode(event.target.value as CharacterViewMode); setSelected(null); }}>
-        <option value="" disabled>캐릭터 목록</option>{characterViews.map(view => <option key={view.id} value={view.id}>{view.label}</option>)}
+      <select aria-label={t(`${title} 캐릭터 필터`)} value={characterMode ? mode : ''} onChange={event => { setMode(event.target.value as CharacterViewMode); setSelected(null); }}>
+        <option value="" disabled>{t("캐릭터 목록")}</option>{characterViews.map(view => <option key={view.id} value={view.id}>{t(view.label)}</option>)}
       </select>
-      {!characterMode && second && <button type="button" className="comparison-back" aria-label="부대 목록" title="부대 목록으로 돌아가기" onClick={() => setSelected(null)}>↶</button>}
+      {!characterMode && second && <button type="button" className="comparison-back" aria-label={t("부대 목록")} title={t("부대 목록으로 돌아가기")} onClick={() => setSelected(null)}>↶</button>}
     </div>
-    <fieldset className="troop-roster-group comparison-troop-group" style={{ gridColumn: number }} aria-label={`${title} 목록 영역`} hidden={hidden}><legend title={legend}>{legend}</legend>{!hidden && <>
+    <fieldset className="troop-roster-group comparison-troop-group" style={{ gridColumn: number }} aria-label={t(`${title} 목록 영역`)} hidden={hidden}><legend title={t(legend)}>{t(legend)}</legend>{!hidden && <>
     {characterMode ? <>
       <MemberTable record={characterRecord} characters={characters} bytes={bytes} originalBytes={originalBytes} label={`${title} ${mode === 'allied-characters' ? '아군' : mode === 'named-characters' ? '네임드' : '전체'} 캐릭터 목록`} />
     </> : second && secondTroop ? <>
       <MemberTable record={second} originalRecord={originalTroopRecords[second.index]} characters={characters} bytes={bytes} originalBytes={originalBytes} label={`${title}원 목록`} />
-    </> : <div className="troop-picker-responsive"><div className="roster-scroll"><table className="second-troop-table" aria-label={`${title} 선택 목록`}>
+    </> : <div className="troop-picker-responsive"><div className="roster-scroll"><table className="second-troop-table" aria-label={t(`${title} 선택 목록`)}>
       <colgroup>{troopColumns.map(column => <col key={column} data-column={column} />)}</colgroup>
-      <thead><tr>{troopColumns.map(column => <th key={column} scope="col" data-column={column}>{column}</th>)}</tr></thead>
+      <thead><tr>{troopColumns.map(column => <th key={column} scope="col" data-column={column}>{t(column)}</th>)}</tr></thead>
       <tbody>{troops.map(troop => { const leader = characters.get(troop.members[0]); const name = leaderName(troop, characters); const special = troop.state === 0 && troop.id >= 252 && troop.id <= 254; const changed = modifiedTroops.has(troop.index);
-        return <tr key={troop.index} tabIndex={0} className={`second-troop-row${changed ? ' second-troop-changed' : ''}`} aria-label={`${title} NO ${troop.state === 0 ? troop.id + 1 : troop.id} · ${name} 선택`} onClick={() => setSelected(troop.index)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(troop.index); } }}>
-          <td data-column="NATION" style={{ color: `var(--color-nation-${troop.nationGroup & 15}, ${troopCountryColor(troop.nationGroup)})` }} title={`${troopCountryName(troop.nationGroup)}${troopNationSuffix(troop.state, troop.nationGroup)}`}>{troopCountryName(troop.nationGroup)}{troopNationSuffix(troop.state, troop.nationGroup)}</td>
+        return <tr key={troop.index} tabIndex={0} className={`second-troop-row${changed ? ' second-troop-changed' : ''}`} aria-label={t(`${title} NO ${troop.state === 0 ? troop.id + 1 : troop.id} · ${name} 선택`)} onClick={() => setSelected(troop.index)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(troop.index); } }}>
+          <td data-column="NATION" style={{ color: `var(--color-nation-${troop.nationGroup & 15}, ${troopCountryColor(troop.nationGroup)})` }} title={t(`${troopCountryName(troop.nationGroup)}${troopNationSuffix(troop.state, troop.nationGroup)}`)}>{t(troopCountryName(troop.nationGroup))}{t(troopNationSuffix(troop.state, troop.nationGroup))}</td>
           <td data-column="NO">{troop.state === 0 ? troop.id + 1 : troop.id}</td>
-          <td data-column="NAME" title={`${name}${changed ? '*' : ''}`}><span className="roster-character-name">{leader && <ClassImage classId={leader.classId} />}<span>{name}{changed ? '*' : ''}</span></span></td>
-          <td data-column="ALL">{troop.memberCount}</td><td data-column="POWER">{special ? '—' : troopPower(troop, characters) ?? '—'}</td><td data-column="MAP-NAME" title={troopLocationName(troop.mapId)}>{troopLocationName(troop.mapId)}</td>
+          <td data-column="NAME" title={t(`${name}${changed ? '*' : ''}`)}><span className="roster-character-name">{leader && <ClassImage classId={leader.classId} />}<span>{t(name)}{t(changed ? '*' : '')}</span></span></td>
+          <td data-column="ALL">{troop.memberCount}</td><td data-column="POWER">{t(special ? '—' : troopPower(troop, characters) ?? '—')}</td><td data-column="MAP-NAME" title={t(troopLocationName(troop.mapId))}>{t(troopLocationName(troop.mapId))}</td>
           <td data-column="ROSTER"><Roster members={troop.members} characters={characters} originalRecord={originalTroopRecords[troop.index]} bytes={bytes} originalBytes={originalBytes} /></td>
         </tr>;
       })}</tbody>
-    </table>{troops.length === 0 && <p className="inventory-empty">부대가 없습니다.</p>}</div></div>}
+    </table>{troops.length === 0 && <p className="inventory-empty">{t("부대가 없습니다.")}</p>}</div></div>}
   </>}</fieldset></section>;
 }
 
@@ -214,7 +215,7 @@ export function TroopRosterWorkspace({ record, troopRecords, characters, bytes, 
     if (from.kind === 'character' && to.kind === 'character') return null;
     if (from.kind === 'new' && to.kind === 'new') return null;
     const allowAresMove = lockedEndpoint(from) || lockedEndpoint(to);
-    if (allowAresMove && !window.confirm(ARES_MOVE_CONFIRM_MESSAGE)) {
+    if (allowAresMove && !window.confirm(t(ARES_MOVE_CONFIRM_MESSAGE))) {
       if (dragging.current) endDrag();
       return null;
     }
@@ -276,12 +277,12 @@ export function TroopRosterWorkspace({ record, troopRecords, characters, bytes, 
   }, []);
   const byIndex = useMemo(() => new Map(characters.map(character => [character.index, character])), [characters]);
   return <InteractionContext.Provider value={interaction}>
-    {interactionError && <p className="troop-edit-error" role="alert">{interactionError}</p>}
+    {t(interactionError && <p className="troop-edit-error" role="alert">{t(interactionError)}</p>)}
     <div className={`troop-roster-workspace columns-${columns}`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-    <div className="troop-layout-controls" role="group" aria-label="부대 비교 배치">
-      {Array.from({ length: maxColumns }, (_, index) => index + 1).map(count => <button key={count} type="button" aria-pressed={columns === count} onClick={() => setColumns(count)}>{count === 1 ? '현재 부대만' : `${count}단 보기`}</button>)}
+    <div className="troop-layout-controls" role="group" aria-label={t("부대 비교 배치")}>
+      {Array.from({ length: maxColumns }, (_, index) => index + 1).map(count => <button key={count} type="button" aria-pressed={columns === count} onClick={() => setColumns(count)}>{t(count === 1 ? '현재 부대만' : `${count}단 보기`)}</button>)}
     </div>
-      <fieldset className="troop-roster-group current-troop-group"><legend>현재 부대</legend>
+      <fieldset className="troop-roster-group current-troop-group"><legend>{t("현재 부대")}</legend>
         <MemberTable record={record} originalRecord={originalTroopRecords[record.index]} characters={byIndex} bytes={bytes} originalBytes={originalBytes} label="현재 부대원 목록" />
       </fieldset>
       {[2, 3, 4, 5].map(number => <ComparisonPane key={number} originalTroopRecords={originalTroopRecords} showInactiveTroops={showInactiveTroops} initialTroopFilter={initialTroopFilter} number={number} hidden={columns < number} troopRecords={troopRecords} characters={byIndex} bytes={bytes} originalBytes={originalBytes} />)}

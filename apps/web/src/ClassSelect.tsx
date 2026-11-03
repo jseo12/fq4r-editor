@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { className } from '@fq4r-editor/save-core';
 import { ClassImage } from './ClassImage';
@@ -61,7 +62,7 @@ export function ClassSelect({ id, value, onChange, label = '직업' }: { id: str
     else if (bottom > parent.scrollTop + parent.clientHeight) parent.scrollTop = bottom - parent.clientHeight;
   }, [open, active, placement.height]);
   return <div className="class-select" ref={container} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false); }}>
-    <button ref={trigger} id={id} type="button" role="combobox" aria-label={label} aria-haspopup="listbox" aria-expanded={open} aria-controls={listId}
+    <button ref={trigger} id={id} type="button" role="combobox" aria-label={t(label)} aria-haspopup="listbox" aria-expanded={open} aria-controls={listId}
       aria-activedescendant={open ? `${listId}-${active}` : undefined} className="class-select-trigger"
       onClick={() => open ? setOpen(false) : reveal()} onKeyDown={event => {
         if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
@@ -77,11 +78,11 @@ export function ClassSelect({ id, value, onChange, label = '직업' }: { id: str
           const match = choices.find(choice => choice.name.startsWith(event.key));
           if (match) { event.preventDefault(); setActive(match.id); setOpen(true); }
         }
-      }}><ClassImage classId={selected} /><span>{className(selected)}</span><span className="class-select-arrow" aria-hidden="true">▾</span></button>
-    {open && <ul ref={list} id={listId} role="listbox" aria-label={`${label} 선택 목록`} className={`class-select-options${placement.above ? ' opens-above' : ''}`} style={{ maxHeight: placement.height }}>
+      }}><ClassImage classId={selected} /><span>{t(className(selected))}</span><span className="class-select-arrow" aria-hidden="true">▾</span></button>
+    {open && <ul ref={list} id={listId} role="listbox" aria-label={t(`${label} 선택 목록`)} className={`class-select-options${placement.above ? ' opens-above' : ''}`} style={{ maxHeight: placement.height }}>
       {choices.map(choice => <li key={choice.id} id={`${listId}-${choice.id}`} role="option" aria-selected={choice.id === value}
         className={choice.id === active ? 'active' : undefined} onMouseDown={event => event.preventDefault()} onMouseMove={() => setActive(choice.id)} onClick={() => choose(choice.id)}>
-        <ClassImage classId={choice.id} /><span>{choice.name}</span><small>{choice.id.toString(16).toUpperCase().padStart(2, '0')}</small>
+        <ClassImage classId={choice.id} /><span>{t(choice.name)}</span><small>{t(choice.id.toString(16).toUpperCase().padStart(2, '0'))}</small>
       </li>)}
     </ul>}
   </div>;

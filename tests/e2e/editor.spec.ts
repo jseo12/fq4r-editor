@@ -34,7 +34,7 @@ function save(flags = 0x58) {
 
 test('web: local file validation, read view, and mobile layout', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1280, height: 900 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     await expect(page.getByRole('heading', { name: 'FQ4R Save Editor' })).toBeVisible();
@@ -749,7 +749,7 @@ test('web: local file validation, read view, and mobile layout', async () => {
 
 test('web: modified-character filter enables on edits, combines with NPC visibility, and clears after resets', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 900 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'characters.dat', mimeType: 'application/octet-stream', buffer: save() });
@@ -797,7 +797,7 @@ test('web: modified-character filter enables on edits, combines with NPC visibil
 
 test('web: troop modal separates information and read-only roster panels', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 900 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'troops.dat', mimeType: 'application/octet-stream', buffer: save() });
@@ -829,7 +829,7 @@ test('web: troop modal separates information and read-only roster panels', async
 
 test('web: full inventory hides addition and filters existing items after freeing a slot', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     const full = save();
     for (let slot = 0; slot < 256; slot++) full.set([1, 1], 0x492 + slot * 2);
@@ -852,7 +852,7 @@ test('web: full inventory hides addition and filters existing items after freein
 
 test('desktop UI: folder list, selection, and validation errors', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'ko-KR' });
   const bytes = Array.from(save());
   await page.addInitScript(({ bytes }) => {
     const result = { kind: 'folder', folder: 'C:\\Games\\FQ4R', entries: [
@@ -955,7 +955,7 @@ test('desktop-native: folder list, remembered folder on restart, and file valida
 
 test('web: troop detailed fields preserve nibbles, strength, unknown bytes and original reset', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1400, height: 1000 } });
   try {
     const bytes = save(); bytes[0x59a6 + 3] = 90; bytes[0x59a6 + 5] = 0x1d; bytes[0x59a6 + 14] = 0x62;
     await page.goto('http://127.0.0.1:5174');
@@ -1004,7 +1004,7 @@ test('web: troop detailed fields preserve nibbles, strength, unknown bytes and o
 
 test('web: inactive troop filter defaults off and all troops enables it', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     await page.goto('http://127.0.0.1:5174');
     await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'inactive.dat', mimeType: 'application/octet-stream', buffer: save() });
@@ -1028,7 +1028,7 @@ test('web: inactive troop filter defaults off and all troops enables it', async 
 
 test('web: allied troop macros clone, retain reset baselines, recruit and report limits', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1500, height: 1000 } });
   try {
     const bytes = save(); bytes[0x59a6 + 3] = 90; bytes[0x59a6 + 5] = 0x1d;
     await page.goto('http://127.0.0.1:5174');
@@ -1082,7 +1082,7 @@ test('web: allied troop macros clone, retain reset baselines, recruit and report
 
 test('web: forced troop deletion confirms risk and keeps shifted reset baselines aligned', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1500, height: 1000 } });
   try {
     const bytes = save();
     await page.goto('http://127.0.0.1:5174');
@@ -1137,7 +1137,7 @@ test('web: forced troop deletion confirms risk and keeps shifted reset baselines
 
 test('web: dual troop roster uses container-responsive columns and selection preserves save bytes', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1400, height: 1000 } });
   try {
     const bytes = save(); const offset = 0x9a6 + 220 * 32;
     bytes[offset + 7] = 10; bytes[offset + 24] = 55; bytes.writeUInt16LE(999, offset + 26);
@@ -1221,7 +1221,7 @@ test('web: dual troop roster uses container-responsive columns and selection pre
 
 test('web: second troop roster previews resize and show an ellipsis for hidden members', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
   try {
     const bytes = editTroop(new Uint8Array(save()), 0, { members: Array(20).fill(220) });
     await page.goto('http://127.0.0.1:5174');
@@ -1248,7 +1248,7 @@ test('web: second troop roster previews resize and show an ellipsis for hidden m
 
 test('web: roster layout toggles and independent comparison filters preserve data and selections', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 2200, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 2200, height: 1000 } });
   try {
     const clone = applyTroopMacro(new Uint8Array(save()), 0, 'clone-allied');
     let bytes = editTroop(clone.data, clone.index, { state: 1, id: 30, members: [0], allowAresMove: true });
@@ -1324,7 +1324,7 @@ test('web: roster layout toggles and independent comparison filters preserve dat
 
 test('web: member selection swaps slots across three panes and character lists replace without pool swaps', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1100 } });
   try {
     let bytes = editTroop(new Uint8Array(save()), 1, { members: [230, 231] });
     bytes = editTroop(bytes, 2, { state: 1, id: 31, members: [240, 241] });
@@ -1387,7 +1387,7 @@ test('web: member selection swaps slots across three panes and character lists r
 
 test('web: member drag swaps live on hover and follows the dragged member across troops', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1100 } });
   try {
     const bytes = editTroop(new Uint8Array(save()), 1, { members: [230, 231] });
     await page.goto('http://127.0.0.1:5174');
@@ -1437,7 +1437,7 @@ test('web: member drag swaps live on hover and follows the dragged member across
 
 test('web: NEW reorders, transfers, adds characters and accepts live dragging', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1100 } });
   try {
     let bytes = editTroop(new Uint8Array(save()), 1, { members: [230, 231] });
     bytes = editTroop(bytes, 2, { state: 1, id: 31, members: [240] });
@@ -1487,7 +1487,7 @@ test('web: NEW reorders, transfers, adds characters and accepts live dragging', 
 });
 
 test('web: NEW disappears at 18 members and returns after moving one out', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
   try {
     const bytes = editTroop(new Uint8Array(save()), 0, { members: Array.from({ length: 17 }, (_, index) => 220 + index) });
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'capacity.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) });
@@ -1504,7 +1504,7 @@ test('web: NEW disappears at 18 members and returns after moving one out', async
 
 
 test('web: comparison dropdowns sit above groups and filter characters by roster and name', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1100 } });
   try {
     let bytes = editTroop(new Uint8Array(save()), 0, { state: 0, id: 0 });
     bytes = editTroop(bytes, 2, { state: 0x30, id: 40, members: [261] });
@@ -1544,7 +1544,7 @@ test('web: comparison dropdowns sit above groups and filter characters by roster
 
 
 test('web: comparison troop filters inherit the main list only when the modal opens', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
   try {
     const bytes = editTroop(new Uint8Array(save()), 0, { state: 0, id: 0 });
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'inherit.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) });
@@ -1567,7 +1567,7 @@ test('web: comparison troop filters inherit the main list only when the modal op
 
 
 test('web: comparison panes inherit inactive visibility even after changing troop filters', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
   try {
     let bytes = editTroop(new Uint8Array(save()), 0, { state: 0, id: 0 }); bytes = editTroop(bytes, 2, { state: 0x30, id: 40, members: [639] });
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'inactive-inherit.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) }); await page.getByRole('button', { name: '부대', exact: true }).click();
@@ -1585,7 +1585,7 @@ test('web: comparison panes inherit inactive visibility even after changing troo
 
 
 test('web: Ares moves only after confirming game risk for swap, replacement, NEW and drag', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
   try {
     const bytes = editTroop(new Uint8Array(save()), 0, { state: 0, id: 0 });
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'ares-confirm.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) }); await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('row', { name: '부대 1 편집', exact: true }).click();
@@ -1613,7 +1613,7 @@ test('web: Ares moves only after confirming game risk for swap, replacement, NEW
 
 
 test('web: roster changes highlight whole rows and star slot numbers against original data', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
   try {
     const bytes = editTroop(new Uint8Array(save()), 1, { members: [230] });
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'member-highlights.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) }); await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('checkbox', { name: '비활성부대 보기', exact: true }).check(); await page.getByRole('row', { name: '부대 7 편집', exact: true }).click();
@@ -1642,7 +1642,7 @@ test('web: roster changes highlight whole rows and star slot numbers against ori
 
 
 test('web: modified troop picker rows keep nation color and mark leader names', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1100 } });
   try {
     const bytes = new Uint8Array(save()); bytes[0x59a6 + 5] = 0x1d;
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'troop-list-changes.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) }); await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('radio', { name: '전체 부대 보기', exact: true }).check(); await page.getByRole('row', { name: '부대 7 편집', exact: true }).click();
@@ -1675,7 +1675,7 @@ test('web: modified troop picker rows keep nation color and mark leader names', 
 
 
 test('web: roster sprite backgrounds mark only changed members in main and comparison lists', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ viewport: { width: 2200, height: 1100 } });
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 2200, height: 1100 } });
   try {
     await page.goto('http://127.0.0.1:5174'); await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'sprite-changes.dat', mimeType: 'application/octet-stream', buffer: save() }); await page.getByRole('button', { name: '부대', exact: true }).click(); await page.getByRole('checkbox', { name: '비활성부대 보기', exact: true }).check();
     const mainRow = page.locator('.troop-table tbody tr[aria-label="부대 7 편집"]'); await expect(mainRow.locator('.roster-image-changed')).toHaveCount(0); await mainRow.click();
@@ -1699,7 +1699,7 @@ test('web: roster sprite backgrounds mark only changed members in main and compa
 
 test('web: up to five roster panes follow width thresholds and share member editing', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1100 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'five-panes.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(save()) });
@@ -1737,7 +1737,7 @@ test('web: up to five roster panes follow width thresholds and share member edit
 
 test('web: formation double click opens character editor with roster navigation and returns', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1800, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1800, height: 1000 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'formation-edit.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(save()) });
@@ -1780,7 +1780,7 @@ test('web: formation double click opens character editor with roster navigation 
 
 test('desktop bridge: returning to save selection refreshes disk summaries', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     const data = Array.from(save()); const summary = parseSave(new Uint8Array(data)).summary;
     await page.addInitScript(({ data, summary }) => {
@@ -1805,7 +1805,7 @@ test('desktop bridge: returning to save selection refreshes disk summaries', asy
 
 
 test('desktop bridge: save as supports cancel and updates the active file', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage();
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     await page.addInitScript(data => {
       let attempt = 0;
@@ -1827,7 +1827,7 @@ test('desktop bridge: save as supports cancel and updates the active file', asyn
 
 
 test('desktop bridge: editor saves update the baseline but later external changes highlight', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage();
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     const data = Array.from(save()); const summary = parseSave(new Uint8Array(data)).summary;
     await page.addInitScript(({ data, summary }) => {
@@ -1852,7 +1852,7 @@ test('desktop bridge: editor saves update the baseline but later external change
 
 
 test('desktop bridge: external change reveals reload and refreshes the editor', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage();
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     await page.addInitScript(data => {
       let listener: (id: string) => void = () => {}; let loads = 0;
@@ -1882,7 +1882,7 @@ test('desktop bridge: external change reveals reload and refreshes the editor', 
 
 test('web: color themes persist, style dialogs and preserve save bytes and typography', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1280, height: 1000 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     const selector = page.getByRole('combobox', { name: '테마 선택', exact: true });
@@ -1940,7 +1940,7 @@ test('web: color themes persist, style dialogs and preserve save bytes and typog
 });
 
 test('web: theme selection handles unavailable storage and unknown theme IDs', async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage();
+  const browser = await chromium.launch({ channel: 'msedge', headless: true }); const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     await page.addInitScript(() => {
       Storage.prototype.getItem = () => { throw new Error('Storage unavailable'); };
@@ -1950,7 +1950,7 @@ test('web: theme selection handles unavailable storage and unknown theme IDs', a
     const selector = page.getByRole('combobox', { name: '테마 선택', exact: true });
     await expect(selector).toHaveValue('fq4remake'); await selector.selectOption('dark');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    const other = await browser.newPage(); await other.addInitScript(() => localStorage.setItem('fq4r-editor.theme', 'unknown-theme'));
+    const other = await browser.newPage({ locale: 'ko-KR' }); await other.addInitScript(() => localStorage.setItem('fq4r-editor.theme', 'unknown-theme'));
     await other.goto('http://127.0.0.1:5174');
     await expect(other.getByRole('combobox', { name: '테마 선택', exact: true })).toHaveValue('fq4remake');
     await expect(other.locator('html')).toHaveAttribute('data-theme', 'fq4remake');
@@ -1960,7 +1960,7 @@ test('web: theme selection handles unavailable storage and unknown theme IDs', a
 
 test('web: Dracula palette covers loading, editor, character dialog and persistence', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1280, height: 1000 } });
   try {
     await page.goto('http://127.0.0.1:5174');
     const selector = page.getByRole('combobox', { name: '테마 선택', exact: true });
@@ -1991,7 +1991,7 @@ test('web: Dracula palette covers loading, editor, character dialog and persiste
 
 test('web: character POWER follows the game formula and remains visible at every width', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1920, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1920, height: 1000 } });
   try {
     const data = save(); const offset = 0x9a6 + 220 * 32;
     data[offset + 12] = 0x89; data[offset + 10] = 17; data[offset + 21] = 0x10;
@@ -2023,7 +2023,7 @@ test('web: character POWER follows the game formula and remains visible at every
 
 test('web: character scope filters allied troop membership and combines with modified-only', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'ko-KR' });
   try {
     const data = save(); data[0x59a6] = 0;
     await page.goto('http://127.0.0.1:5174');
@@ -2050,7 +2050,7 @@ test('web: character scope filters allied troop membership and combines with mod
 
 test('web: character sorting respects filters, navigation, and toolbar alignment', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 900 } });
   try {
     const data = save(); data[0x59a6] = 0;
     data.writeUInt16LE(900, 0x9a6 + 221 * 32 + 26);
@@ -2085,7 +2085,7 @@ test('web: character sorting respects filters, navigation, and toolbar alignment
 
 test('web: ranking shows level99 bounds, ranks by maximum, and shares character filters', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const page = await browser.newPage({ viewport: { width: 1920, height: 1000 } });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1920, height: 1000 } });
   try {
     const data = save(); data[0x59a6] = 0;
     data[0x9a6 + 220 * 32 + 24] = 98;
@@ -2157,5 +2157,161 @@ test('web: ranking shows level99 bounds, ranks by maximum, and shares character 
     await expect(page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true })).toBeChecked();
     await expect(page.locator('.character-table tbody tr')).toHaveCount(1);
 
+  } finally { await browser.close(); }
+});
+
+test('web: i18n detects three supported languages, preserves edits, and translates dialogs', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'en-US', viewport: { width: 1600, height: 1000 } });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    const language = page.locator('.language-select select');
+    await expect(language).toHaveValue('en');
+    await expect(language.locator('option')).toHaveText(['한국어', '日本語', 'English']);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('.drop-copy')).toContainText('click to select a file');
+    await page.getByLabel('Select save file', { exact: true }).setInputFiles({ name: 'languages.dat', mimeType: 'application/octet-stream', buffer: save() });
+    await expect(page.getByRole('navigation', { name: 'Editor views' }).getByRole('button')).toHaveText(['Overview', 'Characters', 'Troops', 'Items', 'Magic', 'Power rankings']);
+    await page.getByLabel('Playtime', { exact: true }).fill('42');
+    await page.getByLabel('Difficulty', { exact: true }).selectOption('처음');
+    await language.selectOption('ja');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
+    await expect(page.getByLabel('プレイ時間', { exact: true })).toHaveValue('42');
+    await expect(page.getByLabel('難易度', { exact: true })).toHaveValue('처음');
+    await expect(page.getByRole('navigation', { name: '編集タブ' }).getByRole('button')).toHaveText(['概要', 'キャラクター', '部隊', 'アイテム', '魔法', 'パワーランキング']);
+    await page.getByRole('button', { name: 'キャラクター', exact: true }).click();
+    await expect(page.getByRole('combobox', { name: 'キャラクター表示範囲', exact: true })).toHaveValue('named');
+    await page.getByRole('row', { name: '아레스を編集', exact: true }).click();
+    let modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    await modal.getByLabel('AT', { exact: true }).fill('77');
+    await expect(modal.getByText('基本能力', { exact: true })).toBeVisible();
+    await modal.getByRole('button', { name: 'キャラクター編集を閉じる', exact: true }).click();
+    await language.selectOption('en');
+    await page.getByRole('row', { name: 'Edit 아레스', exact: true }).click();
+    modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    await expect(modal.getByLabel('AT', { exact: true })).toHaveValue('77');
+    let prompt = '';
+    page.once('dialog', async dialog => { prompt = dialog.message(); await dialog.dismiss(); });
+    await modal.getByRole('button', { name: 'Reset character', exact: true }).click();
+    expect(prompt).toBe('Restore all data for this character to the values originally loaded?');
+    await expect(modal.getByLabel('AT', { exact: true })).toHaveValue('77');
+    await modal.getByRole('button', { name: 'Close character editor', exact: true }).click();
+    for (const name of ['Troops', 'Items', 'Magic', 'Power rankings']) await page.getByRole('button', { name, exact: true }).click();
+    await expect(page.locator('.ranking-description')).toHaveText('Ranked by maximum projected POWER at LV 99.');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: /Download save/ }).click();
+    const downloadedPath = await (await download).path();
+    const data = await readFile(downloadedPath!);
+    const parsed = parseSave(data);
+    expect(parsed.summary.playMinutes).toBe(42); expect(parsed.summary.difficulty).toBe('처음');
+    expect(parsed.characters.find(c => c.index === 220)!.attack).toBe(77);
+    expect(parsed.checksums.every(checksum => checksum.valid)).toBe(true);
+    await language.selectOption('ko');
+    await expect(page.getByRole('button', { name: '개요', exact: true })).toBeVisible();
+    await language.selectOption('ja');
+    await page.reload(); await expect(page.locator('.language-select select')).toHaveValue('ja');
+    await expect(page.locator('.drop-copy')).toContainText('クリックしてファイルを選択してください');
+    await page.screenshot({ path: 'test-results/i18n-japanese-loading.png', fullPage: true });
+  } finally { await browser.close(); }
+});
+
+test('web: unsupported locale falls back to Korean and unavailable storage still allows language switching', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'zh-CN' });
+  try {
+    await page.addInitScript(() => {
+      Storage.prototype.getItem = () => { throw new Error('disabled'); };
+      Storage.prototype.setItem = () => { throw new Error('disabled'); };
+    });
+    await page.goto('http://127.0.0.1:5174');
+    const language = page.locator('.language-select select');
+    await expect(language).toHaveValue('ko');
+    await language.selectOption('en'); await expect(language).toHaveValue('en');
+    await page.getByLabel('Select save file', { exact: true }).setInputFiles({ name: 'invalid.dat', mimeType: 'application/octet-stream', buffer: Buffer.alloc(3) });
+    await expect(page.getByRole('alert')).toContainText('32,768 bytes');
+  } finally { await browser.close(); }
+});
+
+test('web: text navigation fits translated labels and highlights selected, hovered and focused tabs', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 900 } });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'tabs.dat', mimeType: 'application/octet-stream', buffer: save() });
+    const navigation = page.locator('.editor-header nav'); const buttons = navigation.getByRole('button');
+    for (const theme of ['fq4remake', 'light', 'dark', 'dracula']) {
+      await page.getByRole('combobox', { name: /테마 선택|Select theme|テーマ選択/ }).selectOption(theme);
+      for (const language of ['ko', 'en', 'ja']) {
+        await page.locator('.language-select select').selectOption(language);
+        for (const width of [1600, 720, 390]) {
+          await page.setViewportSize({ width, height: 900 });
+          const metrics = await buttons.evaluateAll(items => items.map(button => {
+            const rect = button.getBoundingClientRect(); const range = document.createRange(); range.selectNodeContents(button);
+            const style = getComputedStyle(button);
+            return { y: rect.y, width: button.clientWidth, scrollWidth: button.scrollWidth, textWidth: range.getBoundingClientRect().width,
+              border: style.borderTopWidth, background: style.backgroundColor };
+          }));
+          expect(new Set(metrics.map(metric => metric.y)).size).toBe(1);
+          for (const metric of metrics) {
+            expect(metric.scrollWidth).toBeLessThanOrEqual(metric.width + 1);
+            expect(metric.textWidth).toBeLessThanOrEqual(metric.width);
+            expect(metric.border).toBe('0px'); expect(metric.background).toBe('rgba(0, 0, 0, 0)');
+          }
+          expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        }
+      }
+    }
+    await page.setViewportSize({ width: 1600, height: 900 });
+    const selected = navigation.locator('[aria-pressed="true"]');
+    await expect(selected).toHaveCSS('text-decoration-line', 'underline');
+    const target = buttons.nth(1);
+    const normal = await target.evaluate(element => getComputedStyle(element).color);
+    await target.hover(); await expect(target).not.toHaveCSS('color', normal);
+    await target.focus(); await expect(target).toHaveCSS('text-decoration-style', 'dashed');
+    await target.click(); await page.mouse.move(0, 0);
+    await expect(target).toHaveAttribute('aria-pressed', 'true');
+    await expect(target).toHaveCSS('text-decoration-line', 'underline');
+    await page.screenshot({ path: 'test-results/i18n-text-navigation.png', fullPage: true });
+  } finally { await browser.close(); }
+});
+
+test('desktop UI: filenames and paths remain verbatim in every language and save notification', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 900 } });
+  const folder = 'C:\\게임\\캐릭터 편집';
+  const name = '저장 완료 · 파일 편집.dat';
+  const backupName = '저장 완료 · 백업 편집.bak';
+  await page.addInitScript(({ data, folder, name, backupName }) => {
+    const summary = { locationId: 1, location: '카리온성', playMinutes: 10, difficulty: '고투', gold: 0 };
+    const result = { kind: 'folder', folder, entries: [{ id: 'file', name, summary }], errors: [] };
+    Object.defineProperty(window, 'fq4rDesktop', { value: {
+      restoreFolder: async () => result,
+      chooseFolder: async () => result,
+      loadSave: async () => ({ name, data: new Uint8Array(data), saveId: 'file' }),
+      saveFile: async () => ({ backupName }),
+      saveFileAs: async () => ({ name, saveId: 'file' })
+    } });
+  }, { data: Array.from(save()), folder, name, backupName });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    for (const language of ['ko', 'en', 'ja']) {
+      await page.locator('.language-select select').selectOption(language);
+      await expect(page.locator('.folder-path')).toHaveText(folder);
+      await expect(page.locator('.folder-path')).toHaveAttribute('title', folder);
+      await expect(page.locator('.save-filename')).toHaveText(name);
+    }
+    await page.locator('.save-file-list button').click();
+    for (const language of ['ko', 'en', 'ja']) {
+      await page.locator('.language-select select').selectOption(language);
+      await expect(page.locator('.editor-header h2')).toHaveText(name);
+      await page.locator('.editor-save').first().click();
+      const prefix = language === 'ko' ? '저장 완료 · 백업: ' : language === 'en' ? 'Saved · Backup: ' : '保存完了・バックアップ: ';
+      await expect(page.locator('.save-message')).toHaveText(prefix + backupName);
+    }
+    await page.locator('.editor-save-as').click();
+    await expect(page.locator('.editor-header h2')).toHaveText(name);
+    await expect(page.locator('.save-message')).toHaveText('保存完了・' + name);
+    await page.locator('.language-select select').selectOption('en');
+    await expect(page.locator('.save-message')).toHaveText('Saved · ' + name);
   } finally { await browser.close(); }
 });

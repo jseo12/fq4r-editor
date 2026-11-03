@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { useEffect, useState } from 'react';
 import themes from './themes/themes.json';
 
@@ -27,7 +28,7 @@ export function useTheme() {
 /** Share the same accessible selector between loading and editing screens.
  * 로딩 화면과 편집 화면에서 같은 접근성 레이블의 선택 UI를 사용합니다. */
 export function ThemeSelect({ value, onChange }: { value: string; onChange(value: string): void }) {
-  return <label className="theme-select"><span>테마</span><select aria-label="테마 선택" value={value} onChange={event => onChange(event.target.value)}>
-    {themes.map(theme => <option key={theme.id} value={theme.id}>{theme.name}</option>)}
+  return <label className="theme-select"><span>{t("테마")}</span><select aria-label={t("테마 선택")} value={value} onChange={event => onChange(event.target.value)}>
+    {themes.map(theme => <option key={theme.id} value={theme.id}>{t(theme.name)}</option>)}
   </select></label>;
 }

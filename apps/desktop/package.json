@@ -40,9 +40,7 @@
       "ko",
       "ja",
       "en-US",
-      "en-GB",
-      "zh-CN",
-      "zh-TW"
+      "en-GB"
     ],
     "mac": {
       "target": "zip",

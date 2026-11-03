@@ -273,6 +273,7 @@ export function parseSave(data: Uint8Array, checksumSnapshot?: Checksum[]): Pars
 export type SaveEntry = { id: string; name: string; summary: SaveSummary };
 export type InputResult = { kind: 'folder'; folder: string; entries: SaveEntry[]; errors: string[] } | { kind: 'file'; name: string; data: Uint8Array; saveId?: string };
 export type DesktopBridge = {
+  setLanguage?(language: import('./i18n').Locale): Promise<void>;
   watchSave(id: string | null, baseline?: Uint8Array): Promise<void>;
   onSaveChanged(listener: (id: string) => void): () => void;
   chooseFile(): Promise<InputResult | null>;

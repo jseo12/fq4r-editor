@@ -98,7 +98,7 @@ jobs:
       - name: Check packaged locales
         shell: pwsh
         run: |
-          $expected = @('en-GB', 'en-US', 'ja', 'ko', 'zh-CN', 'zh-TW') | Sort-Object
+          $expected = @('en-GB', 'en-US', 'ja', 'ko') | Sort-Object
           $actual = Get-ChildItem -LiteralPath '${{ matrix.output }}/locales' -Filter '*.pak' | ForEach-Object { $_.BaseName } | Sort-Object
           if (Compare-Object $expected $actual) {
             throw 'Packaged locales do not match the configured languages.'

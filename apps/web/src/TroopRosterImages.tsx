@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { characterName, className, type Character, type TroopRecord } from '@fq4r-editor/save-core';
 import { ClassImage } from './ClassImage';
@@ -24,9 +25,9 @@ export function Roster({ members, characters, originalRecord, bytes, originalByt
       const changed = !originalRecord || originalRecord.isNew || originalRecord.members[position] !== index || bytes.subarray(0x9a6 + index * 32, 0x9a6 + (index + 1) * 32).some((byte, offset) => byte !== originalBytes[0x9a6 + index * 32 + offset]);
       return <span key={position} className={`roster-image${changed ? ' roster-image-changed' : ''}`}>
         {character ? <ClassImage classId={character.classId} label={`${characterName(character.nameId)} · ${className(character.classId)}${changed ? ' · 수정됨' : ''}`} />
-          : <span className="roster-unresolved" title={`캐릭터 슬롯 ${index}: 데이터 없음`}>?</span>}
+          : <span className="roster-unresolved" title={t(`캐릭터 슬롯 ${index}: 데이터 없음`)}>?</span>}
       </span>;
     })}
-    {hiddenCount > 0 && <span className="roster-more" title={`부대원 ${hiddenCount}명 더 있음 (전체 ${members.length}명)`} aria-label={`부대원 ${hiddenCount}명 더 있음`}>…</span>}
+    {hiddenCount > 0 && <span className="roster-more" title={t(`부대원 ${hiddenCount}명 더 있음 (전체 ${members.length}명)`)} aria-label={t(`부대원 ${hiddenCount}명 더 있음`)}>…</span>}
   </div>;
 }

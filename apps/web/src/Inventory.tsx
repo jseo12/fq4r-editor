@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { ITEM_OPTIONS, itemDescription, itemName, type InventoryEdit, type ParsedSave } from '@fq4r-editor/save-core';
 
@@ -7,8 +8,8 @@ function Quantity({ slot, quantity, changed, onChange }: { slot: number; quantit
   const [draft, setDraft] = useState(String(quantity));
   useEffect(() => setDraft(String(quantity)), [quantity]);
   const valid = (text: string) => /^\d+$/.test(text) && Number(text) <= 99;
-  return <input className={`item-quantity${changed ? ' item-quantity-changed' : ''}`} type="number" inputMode="numeric" min={0} max={99} step={1} aria-label={`슬롯 ${slot + 1} 수량`}
-    value={draft} title="0~99 사이의 정수" onKeyDown={event => { if (['e', 'E', '+', '-', '.', ','].includes(event.key)) event.preventDefault(); }}
+  return <input className={`item-quantity${changed ? ' item-quantity-changed' : ''}`} type="number" inputMode="numeric" min={0} max={99} step={1} aria-label={t(`슬롯 ${slot + 1} 수량`)}
+    value={draft} title={t("0~99 사이의 정수")} onKeyDown={event => { if (['e', 'E', '+', '-', '.', ','].includes(event.key)) event.preventDefault(); }}
     onPaste={event => { if (!valid(event.clipboardData.getData('text'))) event.preventDefault(); }}
     onChange={event => {
       const text = event.target.value;
@@ -38,21 +39,21 @@ export function Inventory({ items, identification, originalInventory, originalId
   const clear = () => { source.current = null; setTarget(null); };
   return <>
     <div className="inventory-controls" ref={picker}>
-      <span className="item-count" aria-live="polite">ITEM SLOT : {String(items.length).padStart(2, '0')}/{ITEM_OPTIONS.length}</span>
-      {atLimit ? <span className="item-limit">-아이템 상한 도달-</span> : <button type="button" className="item-add" aria-expanded={pickerOpen} aria-controls="item-picker" onClick={() => setPickerOpen(open => !open)}>+ 아이템 슬롯 추가</button>}
-      {pickerOpen && !atLimit && <ul id="item-picker" className="item-picker" aria-label="추가할 아이템">{availableItems.map(item => <li key={item.id}>
-        <button type="button" onClick={() => { if (!ownedIds.has(item.id) && !atLimit) onChange({ type: 'add', itemId: item.id }); setPickerOpen(false); }}>{item.name}</button>
+      <span className="item-count" aria-live="polite">ITEM SLOT : {t(String(items.length).padStart(2, '0'))}/{ITEM_OPTIONS.length}</span>
+      {atLimit ? <span className="item-limit">{t("-아이템 상한 도달-")}</span> : <button type="button" className="item-add" aria-expanded={pickerOpen} aria-controls="item-picker" onClick={() => setPickerOpen(open => !open)}>{t("+ 아이템 슬롯 추가")}</button>}
+      {pickerOpen && !atLimit && <ul id="item-picker" className="item-picker" aria-label={t("추가할 아이템")}>{availableItems.map(item => <li key={item.id}>
+        <button type="button" onClick={() => { if (!ownedIds.has(item.id) && !atLimit) onChange({ type: 'add', itemId: item.id }); setPickerOpen(false); }}>{t(item.name)}</button>
       </li>)}</ul>}
       <div className="inventory-global">
-        <button type="button" disabled={!items.length} title="능력치 보정·속성·설명의 특수 효과를 점수화하여 높은 순서로 실제 슬롯을 정렬합니다. 사용자에게 불리한 효과는 감점합니다. 직업·전투 상황에 따라 유용성은 달라질 수 있습니다." onClick={() => { clear(); setPickerOpen(false); onChange({ type: 'sort-quality' }); }}>AI추천정렬</button>
-        <button type="button" disabled={!items.length} title="Item ID 오름차순으로 정렬하여 실제 슬롯 순서를 변경합니다." onClick={() => { clear(); setPickerOpen(false); onChange({ type: 'sort' }); }}>오름차순 정렬</button>
-        <button type="button" title="기존 슬롯을 모두 비우고 전체 아이템을 ID 순서대로 99개씩 설정" onClick={() => onChange({ type: 'acquire-all' })}>모든아이템획득</button>
-        <button type="button" disabled={!items.length} onClick={() => onChange({ type: 'quantities', values: items.map(item => ({ slot: item.slot, quantity: 99 })) })}>전체99개</button>
-        <button type="button" disabled={!items.length} onClick={() => onChange({ type: 'quantities', values: items.map(item => ({ slot: item.slot, quantity: Math.floor(Math.random() * 99) + 1 })) })}>전체랜덤</button>
-        <button type="button" onClick={() => onChange({ type: 'identify-all' })}>전체감정</button>
+        <button type="button" disabled={!items.length} title={t("능력치 보정·속성·설명의 특수 효과를 점수화하여 높은 순서로 실제 슬롯을 정렬합니다. 사용자에게 불리한 효과는 감점합니다. 직업·전투 상황에 따라 유용성은 달라질 수 있습니다.")} onClick={() => { clear(); setPickerOpen(false); onChange({ type: 'sort-quality' }); }}>{t("AI추천정렬")}</button>
+        <button type="button" disabled={!items.length} title={t("Item ID 오름차순으로 정렬하여 실제 슬롯 순서를 변경합니다.")} onClick={() => { clear(); setPickerOpen(false); onChange({ type: 'sort' }); }}>{t("오름차순 정렬")}</button>
+        <button type="button" title={t("기존 슬롯을 모두 비우고 전체 아이템을 ID 순서대로 99개씩 설정")} onClick={() => onChange({ type: 'acquire-all' })}>{t("모든아이템획득")}</button>
+        <button type="button" disabled={!items.length} onClick={() => onChange({ type: 'quantities', values: items.map(item => ({ slot: item.slot, quantity: 99 })) })}>{t("전체99개")}</button>
+        <button type="button" disabled={!items.length} onClick={() => onChange({ type: 'quantities', values: items.map(item => ({ slot: item.slot, quantity: Math.floor(Math.random() * 99) + 1 })) })}>{t("전체랜덤")}</button>
+        <button type="button" onClick={() => onChange({ type: 'identify-all' })}>{t("전체감정")}</button>
         <button type="button" onClick={() => {
-          if (window.confirm('아이템 목록과 순서, 수량과 감정 상태를 파일을 처음 불러왔을 때의 값으로 되돌리시겠습니까?')) { onReset(); setPickerOpen(false); }
-        }}>전체리셋</button>
+          if (window.confirm(t('아이템 목록과 순서, 수량과 감정 상태를 파일을 처음 불러왔을 때의 값으로 되돌리시겠습니까?'))) { onReset(); setPickerOpen(false); }
+        }}>{t("전체리셋")}</button>
       </div>
     </div>
     <div className="table-scroll"><table className="inventory-table"><colgroup><col className="inventory-no-column" /><col className="inventory-name-column" /><col className="inventory-desc" /><col className="inventory-quantity-column" /><col className="inventory-macro-column" /></colgroup><thead><tr><th>NO</th><th>NAME</th><th className="inventory-desc">DESC</th><th>QTY</th><th>MACRO</th></tr></thead>
@@ -76,22 +77,22 @@ export function Inventory({ items, identification, originalInventory, originalId
         event.preventDefault(); event.stopPropagation();
         clear();
       }}>
-      <td className={changed ? 'item-slot-changed' : undefined}><span className="item-slot"><button type="button" className="item-drag-handle" draggable aria-label={`슬롯 ${item.slot + 1} 드래그하여 교환`} title="다른 항목 위로 끌면 즉시 슬롯 교환"
-        onDragStart={event => { source.current = item.slot; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(item.slot)); }} onDragEnd={clear}>⠿</button><span className="item-slot-number">{item.slot + 1}{changed ? '*' : ''}</span></span></td>
-      <td className={identificationChanged ? 'item-name-changed' : undefined}>{identification[item.id] === 0 ? '？' : ''}{itemName(item.id)}</td><td className="inventory-desc">{itemDescription(item.id)}</td><td><Quantity slot={item.slot} quantity={item.quantity} changed={quantityChanged} onChange={quantity => onChange({ type: 'quantity', slot: item.slot, quantity })} /></td>
+      <td className={changed ? 'item-slot-changed' : undefined}><span className="item-slot"><button type="button" className="item-drag-handle" draggable aria-label={t(`슬롯 ${item.slot + 1} 드래그하여 교환`)} title={t("다른 항목 위로 끌면 즉시 슬롯 교환")}
+        onDragStart={event => { source.current = item.slot; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(item.slot)); }} onDragEnd={clear}>⠿</button><span className="item-slot-number">{item.slot + 1}{t(changed ? '*' : '')}</span></span></td>
+      <td className={identificationChanged ? 'item-name-changed' : undefined}>{t(identification[item.id] === 0 ? '？' : '')}{t(itemName(item.id))}</td><td className="inventory-desc">{t(itemDescription(item.id))}</td><td><Quantity slot={item.slot} quantity={item.quantity} changed={quantityChanged} onChange={quantity => onChange({ type: 'quantity', slot: item.slot, quantity })} /></td>
       <td><div className="item-macros">
-        <button type="button" aria-label={`슬롯 ${item.slot + 1} 수량 99개`} onClick={() => onChange({ type: 'quantity', slot: item.slot, quantity: 99 })}>99개</button>
-        <button type="button" aria-label={`슬롯 ${item.slot + 1} 랜덤수량`} onClick={() => onChange({ type: 'quantity', slot: item.slot, quantity: Math.floor(Math.random() * 100) })}>랜덤</button>
+        <button type="button" aria-label={t(`슬롯 ${item.slot + 1} 수량 99개`)} onClick={() => onChange({ type: 'quantity', slot: item.slot, quantity: 99 })}>{t("99개")}</button>
+        <button type="button" aria-label={t(`슬롯 ${item.slot + 1} 랜덤수량`)} onClick={() => onChange({ type: 'quantity', slot: item.slot, quantity: Math.floor(Math.random() * 100) })}>{t("랜덤")}</button>
         <button type="button" className={identification[item.id] === 0 ? 'item-identification item-unidentified' : 'item-identification'}
-          disabled={identification[item.id] === undefined} aria-label={`슬롯 ${item.slot + 1} 감정 상태`} aria-pressed={identification[item.id] !== undefined && identification[item.id] !== 0}
-          title={identification[item.id] === undefined ? '저장된 감정 상태 없음' : '같은 종류의 아이템에 함께 적용됩니다.'}
+          disabled={identification[item.id] === undefined} aria-label={t(`슬롯 ${item.slot + 1} 감정 상태`)} aria-pressed={identification[item.id] !== undefined && identification[item.id] !== 0}
+          title={t(identification[item.id] === undefined ? '저장된 감정 상태 없음' : '같은 종류의 아이템에 함께 적용됩니다.')}
           onClick={() => onChange({ type: 'identify', itemId: item.id, identified: identification[item.id] === 0 })}>
-          {identification[item.id] === undefined ? '—' : identification[item.id] === 0 ? '미감정' : '감정'}
+          {t(identification[item.id] === undefined ? '—' : identification[item.id] === 0 ? '미감정' : '감정')}
         </button>
-        <button type="button" className="item-delete" aria-label={`슬롯 ${item.slot + 1} 아이템 삭제`} onClick={() => {
-          if (window.confirm(`슬롯 ${item.slot + 1}의 ${itemName(item.id)}을(를) 삭제하시겠습니까?`)) onChange({ type: 'delete', slot: item.slot });
+        <button type="button" className="item-delete" aria-label={t(`슬롯 ${item.slot + 1} 아이템 삭제`)} onClick={() => {
+          if (window.confirm(t(`슬롯 ${item.slot + 1}의 ${itemName(item.id)}을(를) 삭제하시겠습니까?`))) onChange({ type: 'delete', slot: item.slot });
         }}>×</button>
       </div></td>
     </tr>;
-    })}</tbody></table>{!items.length && <p className="inventory-empty">보유한 아이템이 없습니다.</p>}</div></>;
+    })}</tbody></table>{!items.length && <p className="inventory-empty">{t("보유한 아이템이 없습니다.")}</p>}</div></>;
 }

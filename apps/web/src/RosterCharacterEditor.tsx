@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { createContext, useState, type ReactNode } from 'react';
 import { CharacterEditor } from './CharacterEditor';
 
@@ -9,7 +10,7 @@ export function RosterCharacterEditor({ bytes, originalBytes, onChange, children
   const [editing, setEditing] = useState<{ members: number[]; position: number } | null>(null);
   const index = editing?.members[editing.position];
   return <RosterCharacterContext.Provider value={(members, position) => setEditing({ members: [...members], position })}>
-    {children}
+    {t(children)}
     {editing && index !== undefined && <CharacterEditor key={index} index={index} record={bytes.slice(0x9a6 + index * 32, 0x9a6 + (index + 1) * 32)} resetRecord={originalBytes.slice(0x9a6 + index * 32, 0x9a6 + (index + 1) * 32)} onChange={record => onChange(index, record)} onClose={() => setEditing(null)} onPrevious={editing.position > 0 ? () => setEditing({ ...editing, position: editing.position - 1 }) : undefined} onNext={editing.position < editing.members.length - 1 ? () => setEditing({ ...editing, position: editing.position + 1 }) : undefined} />}
   </RosterCharacterContext.Provider>;
 }

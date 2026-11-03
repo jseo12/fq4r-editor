@@ -1,3 +1,4 @@
+import { setLocale, resolveLocale, SUPPORTED_LOCALES, t, type Locale } from '../../../packages/save-core/src/i18n.ts';
 import { prepareSave } from '../../../packages/save-core/src/index.ts';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -10,6 +11,7 @@ if (process.env.FQ4R_TEST_USER_DATA) app.setPath('userData', process.env.FQ4R_TE
 if (process.platform === 'win32') app.setAppUserModelId('com.corpseplay.fq4r-editor');
 
 app.whenReady().then(() => {
+  setLocale(resolveLocale([app.getLocale()]));
   const files = new SaveFiles(app.getPath('userData'));
   let watched: { id: string; fingerprint: string } | null = null;
   let writing = false;
@@ -44,12 +46,16 @@ app.whenReady().then(() => {
       return action(...args);
     });
   };
+  handle('app:language', language => {
+    if (typeof language !== 'string' || !SUPPORTED_LOCALES.includes(language as Locale)) throw new Error('Unsupported language');
+    setLocale(language as Locale);
+  });
   handle('save:choose-file', async () => {
-    const result = await dialog.showOpenDialog(window!, { properties: ['openFile'], filters: [{ name: 'FQ4R 세이브 파일', extensions: ['dat'] }, { name: '모든 파일', extensions: ['*'] }] });
+    const result = await dialog.showOpenDialog(window!, { properties: ['openFile'], filters: [{ name: t('FQ4R 세이브 파일'), extensions: ['dat'] }, { name: t('모든 파일'), extensions: ['*'] }] });
     return result.canceled ? null : files.openPath(result.filePaths[0]);
   });
   handle('save:choose-folder', async () => {
-    const result = await dialog.showOpenDialog(window!, { properties: ['openDirectory'], title: 'FQ4R 게임 폴더 선택' });
+    const result = await dialog.showOpenDialog(window!, { properties: ['openDirectory'], title: t('FQ4R 게임 폴더 선택') });
     return result.canceled ? null : files.openPath(result.filePaths[0]);
   });
   handle('save:drop', path => {
@@ -71,7 +77,7 @@ app.whenReady().then(() => {
   });
   handle('save:write-as', async (id, data) => {
     if (typeof id !== 'string' || !(data instanceof Uint8Array)) throw new Error('저장 요청이 올바르지 않습니다.');
-    const result = await dialog.showSaveDialog(window!, { title: '다른 이름으로 저장', defaultPath: files.savePath(id), filters: [{ name: 'FQ4R 세이브 파일', extensions: ['dat'] }], properties: ['showOverwriteConfirmation', 'createDirectory'] });
+    const result = await dialog.showSaveDialog(window!, { title: t('다른 이름으로 저장'), defaultPath: files.savePath(id), filters: [{ name: t('FQ4R 세이브 파일'), extensions: ['dat'] }], properties: ['showOverwriteConfirmation', 'createDirectory'] });
     if (result.canceled || !result.filePath) return null;
     watchRevision++; writing = true;
     try {

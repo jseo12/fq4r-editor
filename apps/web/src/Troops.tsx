@@ -1,3 +1,4 @@
+import { t } from '../../../packages/save-core/src/i18n';
 import { troopHasChanges } from './troop-changes';
 import { useMemo, useState } from 'react';
 import { characterName, readTroopRecords, troopLocationName, troopCountryName, troopCountryColor, troopNationSuffix, compareTroops, troopPower, type Character, type Troop, type TroopEdit, type TroopRecord, type TroopMacro, type TroopMemberSlot, type TroopAppendSource } from '@fq4r-editor/save-core';
@@ -36,24 +37,24 @@ export function Troops({ troops, characters, bytes, originalBytes, onChange, onM
   const sortedTroops = [...troops].sort(compareTroops);
   const visibleTroops = sortedTroops.filter(troop => (showInactive || (troop.state & 0xf0) !== 0x30) && (filter === 'all' || (filter === 'allies' ? troop.state === 0 || troop.state === 0x30 : specialTroopName(troop) !== undefined || (byIndex.get(troop.members[0])?.nameId ?? 0) > 0)));
   return <>
-    {editError && <p className="troop-edit-error" role="alert">{editError}</p>}
-    <div className="troop-controls"><div className="troop-filter-options" role="radiogroup" aria-label="부대 표시 조건">
+    {t(editError && <p className="troop-edit-error" role="alert">{t(editError)}</p>)}
+    <div className="troop-controls"><div className="troop-filter-options" role="radiogroup" aria-label={t("부대 표시 조건")}>
       {([['allies', '아군 부대 보기'], ['named', '네임드 부대 보기'], ['all', '전체 부대 보기']] as const).map(([value, label]) =>
-        <label key={value}><input type="radio" name="troop-filter" value={value} checked={filter === value} onChange={() => { setFilter(value); if (value === 'all') setShowInactive(true); }} />{label}</label>)}
-      </div><label><input type="checkbox" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} />비활성부대 보기</label>
+        <label key={value}><input type="radio" name="troop-filter" value={value} checked={filter === value} onChange={() => { setFilter(value); if (value === 'all') setShowInactive(true); }} />{t(label)}</label>)}
+      </div><label><input type="checkbox" checked={showInactive} onChange={event => setShowInactive(event.target.checked)} />{t("비활성부대 보기")}</label>
     </div>
     <div className="table-scroll"><table className="troop-table"><colgroup>{['NATION', 'NO', 'NAME', 'ALL', 'POWER', 'MAP-NAME', 'ROSTER'].map(column => <col key={column} data-column={column} />)}</colgroup><thead><tr>
-    {['NATION', 'NO', 'NAME', 'ALL', 'POWER', 'MAP-NAME', 'ROSTER'].map(column => <th key={column} data-column={column} scope="col">{column}</th>)}
+    {['NATION', 'NO', 'NAME', 'ALL', 'POWER', 'MAP-NAME', 'ROSTER'].map(column => <th key={column} data-column={column} scope="col">{t(column)}</th>)}
   </tr></thead><tbody>{visibleTroops.map(troop => {
     const changed = modifiedTroops.has(troop.index);
     const leader = byIndex.get(troop.members[0]);
     const specialName = specialTroopName(troop);
     const power = specialName ? '-' : troopPower(troop, byIndex);
-    return <tr key={troop.index} className={`troop-edit-row${changed ? ' troop-changed' : ''}`} tabIndex={0} aria-label={`부대 ${troop.state === 0 ? troop.id + 1 : troop.id} 편집`} onClick={() => openEditor(troop.index)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openEditor(troop.index); } }}>
-      <td data-column="NATION" style={{ color: `var(--color-nation-${troop.nationGroup & 15}, ${troopCountryColor(troop.nationGroup)})` }} title={`소속 +00: 0x${troop.state.toString(16).toUpperCase().padStart(2, '0')} / 국가 그룹 +05: 0x${troop.nationGroup.toString(16).toUpperCase().padStart(2, '0')}`}><span className="troop-nation-text" title={`${troopCountryName(troop.nationGroup)}${troopNationSuffix(troop.state, troop.nationGroup)}`}>{troopCountryName(troop.nationGroup)}{troopNationSuffix(troop.state, troop.nationGroup)}</span></td>
+    return <tr key={troop.index} className={`troop-edit-row${changed ? ' troop-changed' : ''}`} tabIndex={0} aria-label={t(`부대 ${troop.state === 0 ? troop.id + 1 : troop.id} 편집`)} onClick={() => openEditor(troop.index)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openEditor(troop.index); } }}>
+      <td data-column="NATION" style={{ color: `var(--color-nation-${troop.nationGroup & 15}, ${troopCountryColor(troop.nationGroup)})` }} title={t(`소속 +00: 0x${troop.state.toString(16).toUpperCase().padStart(2, '0')} / 국가 그룹 +05: 0x${troop.nationGroup.toString(16).toUpperCase().padStart(2, '0')}`)}><span className="troop-nation-text" title={t(`${troopCountryName(troop.nationGroup)}${troopNationSuffix(troop.state, troop.nationGroup)}`)}>{t(troopCountryName(troop.nationGroup))}{t(troopNationSuffix(troop.state, troop.nationGroup))}</span></td>
       <td data-column="NO">{troop.state === 0 ? troop.id + 1 : troop.id}</td>
-      <td data-column="NAME" title={specialName ?? (leader ? characterName(leader.nameId) : '')} className={!specialName && leader?.nameId === 0 ? 'empty-value' : undefined}>{specialName ?? (leader ? characterName(leader.nameId) : troop.memberCount === 0 ? '(부대원 없음)' : '(캐릭터 미확인)')}{changed ? '*' : ''}</td>
-      <td data-column="ALL">{troop.memberCount}</td><td data-column="POWER">{power ?? '—'}</td><td data-column="MAP-NAME" title={troopLocationName(troop.mapId)}>{troopLocationName(troop.mapId)}</td>
+      <td data-column="NAME" title={t(specialName ?? (leader ? characterName(leader.nameId) : ''))} className={!specialName && leader?.nameId === 0 ? 'empty-value' : undefined}>{t(specialName ?? (leader ? characterName(leader.nameId) : troop.memberCount === 0 ? '(부대원 없음)' : '(캐릭터 미확인)'))}{t(changed ? '*' : '')}</td>
+      <td data-column="ALL">{troop.memberCount}</td><td data-column="POWER">{t(power ?? '—')}</td><td data-column="MAP-NAME" title={t(troopLocationName(troop.mapId))}>{t(troopLocationName(troop.mapId))}</td>
       <td data-column="ROSTER"><Roster members={troop.members} characters={byIndex} originalRecord={baselineRecords[troop.index]} bytes={bytes} originalBytes={originalBytes} /></td>
     </tr>;
   })}</tbody></table></div>

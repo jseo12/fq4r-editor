@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer, webUtils } = require('electron');
 // Expose only the operations needed by the renderer, never raw Node or IPC APIs.
 // 렌더러에는 필요한 기능만 노출하고 Node나 IPC API 자체는 전달하지 않습니다.
 contextBridge.exposeInMainWorld('fq4rDesktop', {
+  setLanguage: (language) => ipcRenderer.invoke('app:language', language),
   watchSave: (id, baseline) => ipcRenderer.invoke('save:watch', id, baseline),
   onSaveChanged: (listener) => {
     const handler = (_event, id) => listener(id);

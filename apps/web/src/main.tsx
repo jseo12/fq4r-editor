@@ -1,3 +1,5 @@
+import { initializeLanguage, LanguageSelect, useLanguage } from './LanguageSelect';
+import { t, formatNumber, formatMessage } from '../../../packages/save-core/src/i18n';
 import { ThemeSelect, useTheme } from './ThemeSelect';
 import { version as projectVersion } from '../../../package.json';
 import { RosterCharacterEditor } from './RosterCharacterEditor';
@@ -14,9 +16,10 @@ import { Inventory } from './Inventory';
 
 declare global { interface Window { fq4rDesktop?: DesktopBridge } }
 type Folder = Extract<InputResult, { kind: 'folder' }>;
-const number = (value: number) => value.toLocaleString('ko-KR');
+const number = formatNumber;
 
 function App() {
+  useLanguage();
   const [theme, setTheme] = useTheme();
   const desktop = window.fq4rDesktop;
   const input = useRef<HTMLInputElement>(null);
@@ -31,7 +34,7 @@ function App() {
   const [opened, setOpened] = useState<{ name: string; save: ParsedSave; bytes: Uint8Array; originalBytes: Uint8Array; troopOriginals?: TroopRecord[]; originalSummary: ParsedSave['summary']; originalCharacters: Uint8Array; originalMagic: SpellList[]; originalInventory: Uint8Array; originalItemIdentification: Uint8Array; saveId?: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [externallyChanged, setExternallyChanged] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ text: string; error?: boolean } | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{ text: string; parameters?: string[]; error?: boolean } | null>(null);
   const [tab, setTab] = useState('overview');
   const [characterSort, setCharacterSort] = useState<CharacterSort>('default');
   const [characterScope, setCharacterScope] = useState<CharacterScope>('named');
@@ -161,7 +164,7 @@ function App() {
           const result = await desktop.saveFileAs(opened.saveId, output);
           if (!result) return;
           setOpened(current => current?.bytes === source ? { ...current, name: result.name, saveId: result.saveId } : current);
-          setSaveMessage({ text: `저장 완료 · ${result.name}` });
+          setSaveMessage({ text: '저장 완료 · {0}', parameters: [result.name] });
         } else {
           const result = await desktop.saveFile(opened.saveId, output);
           // Successful editor writes become the disk-summary comparison baseline.
@@ -169,7 +172,7 @@ function App() {
           const savedSummary = parseSave(output).summary;
           setFolder(current => current ? { ...current, entries: current.entries.map(entry => entry.id === opened.saveId ? { ...entry, summary: savedSummary } : entry) } : current);
           setChangedSaveNames(current => { const next = new Set(current); next.delete(opened.name); return next; });
-          setSaveMessage({ text: `저장 완료 · 백업: ${result.backupName}` });
+          setSaveMessage({ text: '저장 완료 · 백업: {0}', parameters: [result.backupName] });
         }
       } else {
         const url = URL.createObjectURL(new Blob([new Uint8Array(output).buffer], { type: 'application/octet-stream' }));
@@ -290,57 +293,58 @@ function App() {
   }
 
   return <main className={opened ? 'editor-page' : 'loading-page-root'}>
-      <input ref={input} className="visually-hidden" type="file" accept=".dat" aria-label="세이브 파일 선택" onChange={event => {
+      <input ref={input} className="visually-hidden" type="file" accept=".dat" aria-label={t("세이브 파일 선택")} onChange={event => {
         const file = event.currentTarget.files?.[0]; event.currentTarget.value = '';
         if (file) void run(() => browserFile(file));
       }} />
     {!opened && <section className="loading-page">
-    <div className="loading-theme"><ThemeSelect value={theme} onChange={setTheme} /></div>
+    <div className="loading-theme"><LanguageSelect /><ThemeSelect value={theme} onChange={setTheme} /></div>
     <header className="loading-header"><span className="eyebrow">FIRST QUEEN IV · WINDOWS REMAKE</span><h1>FQ4R Save Editor</h1></header>
-    <section className="workspace" aria-label="세이브 작업 영역">
-      <section className={`first-loading-zone ${dragging ? 'dragging' : ''}`} id="first-loading-zone" aria-label="세이브 로딩"
+    <section className="workspace" aria-label={t("세이브 작업 영역")}>
+      <section className={`first-loading-zone ${dragging ? 'dragging' : ''}`} id="first-loading-zone" aria-label={t("세이브 로딩")}
         onDragEnter={event => { event.preventDefault(); dragDepth.current++; setDragging(true); }}
         onDragOver={event => event.preventDefault()}
         onDragLeave={event => { event.preventDefault(); if (--dragDepth.current <= 0) setDragging(false); }} onDrop={drop}>
         {!folder ? <button className="drop-zone" disabled={busy} onClick={chooseFile}>
-          <span className="drop-copy">게임 폴더나 세이브 파일을 여기로 드래그 하거나<br />클릭하여 파일을 선택하세요</span>
-          <span className="drop-hint">{busy ? '세이브 파일을 확인하고 있습니다…' : desktop ? 'FQ4R 게임 폴더 또는 세이브 파일 · .dat' : '웹에서는 세이브 파일 하나를 선택해주세요 · .dat'}</span>
+          <span className="drop-copy">{t("게임 폴더나 세이브 파일을 여기로 드래그 하거나")}<br />{t("클릭하여 파일을 선택하세요")}</span>
+          <span className="drop-hint">{t(busy ? '세이브 파일을 확인하고 있습니다…' : desktop ? 'FQ4R 게임 폴더 또는 세이브 파일 · .dat' : '웹에서는 세이브 파일 하나를 선택해주세요 · .dat')}</span>
         </button> : <div className="folder-list-content">
-          <div className="section-title"><h2>세이브 파일 선택</h2>{desktop && <button className="folder-text-action" disabled={busy} onClick={() => void run(() => desktop.chooseFolder())}>다른 게임 폴더 선택</button>}</div>
-          <div className="folder-metadata"><p className="folder-path" title={folder.folder}>{folder.folder}</p><span className="folder-save-count">{folder.entries.length}개의 세이브</span></div>
-          <ul className="save-file-list" aria-label="폴더의 세이브 목록">{folder.entries.map(entry => <li key={entry.id}>
+          <div className="section-title"><h2>{t("세이브 파일 선택")}</h2>{desktop && <button className="folder-text-action" disabled={busy} onClick={() => void run(() => desktop.chooseFolder())}>{t("다른 게임 폴더 선택")}</button>}</div>
+          <div className="folder-metadata"><p className="folder-path" title={folder.folder}>{folder.folder}</p><span className="folder-save-count">{folder.entries.length}{t("개의 세이브")}</span></div>
+          <ul className="save-file-list" aria-label={t("폴더의 세이브 목록")}>{folder.entries.map(entry => <li key={entry.id}>
             <button className={changedSaveNames.has(entry.name) ? 'save-summary-changed' : undefined} disabled={busy} aria-current={selected === entry.id ? 'true' : undefined} onClick={() => chooseEntry(entry.id)}>
-              <span className="save-location">{entry.summary.location}</span><span>{number(entry.summary.playMinutes)}분</span><span>{entry.summary.difficulty}</span><span className="save-filename">{entry.name}</span>
+              <span className="save-location">{t(entry.summary.location)}</span><span>{t(number(entry.summary.playMinutes))}{t("분")}</span><span>{t(entry.summary.difficulty)}</span><span className="save-filename">{entry.name}</span>
             </button>
           </li>)}</ul>
-          {busy && <p role="status">세이브 파일을 확인하고 있습니다…</p>}
-          {folder.errors.length > 0 && <details className="validation-errors" open><summary>열 수 없는 파일 {folder.errors.length}개</summary><ul>{folder.errors.map(message => <li key={message}>{message}</li>)}</ul></details>}
+          {busy && <p role="status">{t("세이브 파일을 확인하고 있습니다…")}</p>}
+          {folder.errors.length > 0 && <details className="validation-errors" open><summary>{t("열 수 없는 파일 ")}{folder.errors.length}{t("개")}</summary><ul>{folder.errors.map(message => <li key={message}>{t(message)}</li>)}</ul></details>}
         </div>}
       </section>
-      <p className="privacy">세이브 파일은 브라우저 또는 데스크톱에서만 처리되며 서버로 전송되지 않습니다.</p>
-      {error && <div className="notice error" role="alert">{error}</div>}
+      <p className="privacy">{t("세이브 파일은 브라우저 또는 데스크톱에서만 처리되며 서버로 전송되지 않습니다.")}</p>
+      {t(error && <div className="notice error" role="alert">{t(error)}</div>)}
     </section>
-    <footer className="loading-footer"><p>ⓒ CorpsePlay.com | <a href="https://github.com/jseo12/fq4r-editor" target="_blank" rel="noreferrer">GitHub</a></p><p className="font-credit">이 페이지는 리디주식회사에서 제공한 리디바탕 글꼴이 사용되어 있습니다.</p></footer>
+    <footer className="loading-footer"><p>ⓒ CorpsePlay.com | <a href="https://github.com/jseo12/fq4r-editor" target="_blank" rel="noreferrer">GitHub</a></p><p className="font-credit">{t("이 페이지는 리디주식회사에서 제공한 리디바탕 글꼴이 사용되어 있습니다.")}</p></footer>
     </section>}
-      {opened && <section className="editor" aria-label="세이브 에디터">
+      {opened && <section className="editor" aria-label={t("세이브 에디터")}>
         <header className="editor-header">
-        <div className="section-title"><div><span className="eyebrow">FQ4R Save Editor V{projectVersion} ⓒ CorpsePlay.com</span><h2>{opened.name}</h2></div><div className="editor-header-actions"><ThemeSelect value={theme} onChange={setTheme} /><button className="secondary" disabled={saving} onClick={returnToSaveSelection}>세이브 선택으로</button></div></div>
-        <div className="editor-toolbar"><nav aria-label="에디터 보기">{[['overview', '개요'], ['characters', '캐릭터'], ['troops', '부대'], ['inventory', '아이템'], ['magic', '마법'], ['ranking', '파워랭킹']].map(([id, name]) => <button key={id} disabled={saving} aria-pressed={tab === id} onClick={() => setTab(id)}>{name}</button>)}</nav>{desktop && externallyChanged && <button className="editor-reload" disabled={saving} onClick={() => void reloadCurrentSave()} title="현재 편집 내용을 파일의 최신 데이터로 바꿉니다."><span aria-hidden="true">↻</span> 세이브 다시읽기</button>}<button className="editor-save" disabled={saving} onClick={() => void saveCurrentFile()}><span aria-hidden="true">{desktop ? '💾' : '⤓'}</span> {saving ? '저장 중…' : desktop ? '저장' : '세이브 파일 다운로드'}</button>{desktop && <button className="editor-save editor-save-as" disabled={saving} onClick={() => void saveCurrentFile(true)}><span aria-hidden="true">📄</span> 다른 이름으로 저장</button>}</div>
-        {saveMessage && <p className={`save-message${saveMessage.error ? ' save-error' : ''}`} role={saveMessage.error ? 'alert' : 'status'}>{saveMessage.text}</p>}
+        <div className="section-title"><div><span className="eyebrow">FQ4R Save Editor V{projectVersion} ⓒ CorpsePlay.com</span><h2>{opened.name}</h2></div><div className="editor-header-actions"><LanguageSelect /><ThemeSelect value={theme} onChange={setTheme} /><button className="secondary" disabled={saving} onClick={returnToSaveSelection}>{t("세이브 선택으로")}</button></div></div>
+        <div className="editor-toolbar"><nav aria-label={t("에디터 보기")}>{[['overview', '개요'], ['characters', '캐릭터'], ['troops', '부대'], ['inventory', '아이템'], ['magic', '마법'], ['ranking', '파워랭킹']].map(([id, name]) => <button key={id} disabled={saving} aria-pressed={tab === id} onClick={() => setTab(id)}>{t(name)}</button>)}</nav>{desktop && externallyChanged && <button className="editor-reload" disabled={saving} onClick={() => void reloadCurrentSave()} title={t("현재 편집 내용을 파일의 최신 데이터로 바꿉니다.")}><span aria-hidden="true">↻</span>{t(" 세이브 다시읽기")}</button>}<button className="editor-save" disabled={saving} onClick={() => void saveCurrentFile()}><span aria-hidden="true">{t(desktop ? '💾' : '⤓')}</span> {t(saving ? '저장 중…' : desktop ? '저장' : '세이브 파일 다운로드')}</button>{desktop && <button className="editor-save editor-save-as" disabled={saving} onClick={() => void saveCurrentFile(true)}><span aria-hidden="true">📄</span>{t(" 다른 이름으로 저장")}</button>}</div>
+        {saveMessage && <p className={`save-message${saveMessage.error ? ' save-error' : ''}`} role={saveMessage.error ? 'alert' : 'status'}>{saveMessage.parameters ? formatMessage(saveMessage.text, saveMessage.parameters) : t(saveMessage.text)}</p>}
         </header>
-        <div className="editor-body" inert={saving} key={tab} tabIndex={0} aria-label="에디터 내용">
-        {opened.save.warnings.map(warning => <p className="notice" key={warning}>{warning}</p>)}
-        <section className="tab-panel" key={tab} aria-label="탭 내용" tabIndex={0}>
+        <div className="editor-body" inert={saving} key={tab} tabIndex={0} aria-label={t("에디터 내용")}>
+        {opened.save.warnings.map(warning => <p className="notice" key={warning}>{t(warning)}</p>)}
+        <section className="tab-panel" key={tab} aria-label={t("탭 내용")} tabIndex={0}>
         {tab === 'overview' && <Overview originalSummary={opened.originalSummary} save={opened.save} onChange={changeOverview} onRepairChecksum={repairChecksum} />}
         {(tab === 'characters' || tab === 'ranking') && <Characters magic={opened.save.magic} ranking={tab === 'ranking'} originalCharacters={opened.originalCharacters} bytes={opened.bytes} onSave={changeCharacter} characters={opened.save.characters} showModified={showModifiedCharacters} onShowModified={setShowModifiedCharacters} troops={opened.save.troops} scope={characterScope} onScope={setCharacterScope} sort={characterSort} onSort={setCharacterSort} />}
         {tab === 'inventory' && <Inventory originalInventory={opened.originalInventory} originalIdentification={opened.originalItemIdentification} items={opened.save.inventory} identification={opened.save.itemIdentifications} onChange={changeInventory} onReset={() => changeInventory({ type: 'restore', region: opened.originalInventory, identification: opened.originalItemIdentification })} />}
         {tab === 'troops' && <RosterCharacterEditor bytes={opened.bytes} originalBytes={opened.originalBytes} onChange={changeCharacter}><Troops troops={opened.save.troops} characters={opened.save.characters} bytes={opened.bytes} originalBytes={opened.originalBytes} originalRecords={opened.troopOriginals} onMacro={runTroopMacro} onSwap={swapMembers} onReplace={replaceMember} onAppend={appendMember} onChange={changeTroop} /></RosterCharacterEditor>}
         {tab === 'magic' && <Magic originalLists={opened.originalMagic} lists={opened.save.magic} onChange={changeMagic} onReset={resetMagic} />}
-        {tab === 'magic' && error && <p className="notice error" role="alert">{error}</p>}
+        {t(tab === 'magic' && error && <p className="notice error" role="alert">{t(error)}</p>)}
         </section>
         </div>
       </section>}
   </main>;
 }
 
+initializeLanguage();
 createRoot(document.getElementById('root')!).render(<App />);
