@@ -1,7 +1,7 @@
 {
   "name": "@fq4r-editor/web",
   "private": true,
-  "version": "1.1.0-alpha.2",
+  "version": "1.2.0-alpha.3",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "@fq4r-editor/save-core": "1.1.0-alpha.2"
+    "@fq4r-editor/save-core": "1.2.0-alpha.3"
   },
   "devDependencies": {
     "vite": "8.3.5",

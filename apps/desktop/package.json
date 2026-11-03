@@ -4,7 +4,7 @@
   "description": "Local FQ4R Windows remake save viewer and editor foundation",
   "author": "CorpsePlay.com",
   "private": true,
-  "version": "1.1.0-alpha.2",
+  "version": "1.2.0-alpha.3",
   "main": "dist/main.cjs",
   "scripts": {
     "package": "electron-builder --win --dir",
