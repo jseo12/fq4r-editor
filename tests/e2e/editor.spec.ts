@@ -2426,6 +2426,36 @@ test('desktop UI: folder map labels follow Japanese selection using stable locat
   } finally { await browser.close(); }
 });
 
+test('desktop UI: localized save difficulty columns fit without wrapping or overlap', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ko-KR' });
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'fq4rDesktop', { value: { restoreFolder: async () => ({ kind: 'folder', folder: 'C:/Games/FQ4R',
+      entries: ['처음', '초보', '보통', '능숙', '고투'].map((difficulty, i) => ({ id: String(i), name: `save0${i}.dat`, summary: { locationId: 10, location: '켄트마을', playMinutes: 313, difficulty, gold: 0 } })), errors: [] }) } });
+  });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    for (const language of ['ko', 'ja', 'en']) {
+      await page.locator('.language-select select').selectOption(language);
+      for (const width of [1280, 720, 640, 390]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const cells = await page.locator('.save-file-list button').evaluateAll(rows => rows.map(row => Array.from(row.children).map(cell => {
+          const rect = cell.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, fits: cell.scrollWidth <= cell.clientWidth, nowrap: getComputedStyle(cell).whiteSpace === 'nowrap' };
+        })));
+        expect(cells).toHaveLength(5);
+        for (const row of cells) {
+          expect(row.slice(1).every(cell => cell.fits && cell.nowrap)).toBe(true);
+          for (let i = 0; i < row.length; i++) for (let j = i + 1; j < row.length; j++) {
+            const a = row[i], b = row[j];
+            expect(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top).toBe(true);
+          }
+        }
+      }
+    }
+  } finally { await browser.close(); }
+});
+
 test('web: ranking ties use maximum level99 POWER and competition ranks within each scope', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
   const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
