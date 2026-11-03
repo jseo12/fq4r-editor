@@ -96,7 +96,7 @@ app.whenReady().then(() => {
     } finally { writing = false; }
   });
   window.webContents.setWindowOpenHandler(({ url }) => {
-    if (url === 'https://github.com/jseo12/fq4r-editor') void shell.openExternal(url);
+    if (['https://github.com/jseo12/fq4r-editor', 'https://ridicorp.com/ridibatang/'].includes(url)) void shell.openExternal(url);
     return { action: 'deny' };
   });
   window.webContents.on('will-navigate', event => event.preventDefault());
