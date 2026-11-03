@@ -3,11 +3,11 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { className } from '@fq4r-editor/save-core';
 import { ClassImage } from './ClassImage';
 
-const choices = Array.from({ length: 256 }, (_, id) => ({ id, name: className(id) }));
 
 /** Select a class with sprite labels, keyboard navigation, and outside-click dismissal.
  * 직업 이미지를 표시하고 키보드 이동 및 바깥 클릭 닫기를 지원하는 선택 상자입니다. */
 export function ClassSelect({ id, value, onChange, label = '직업' }: { id: string; value: number; onChange(value: number): void; label?: string }) {
+  const choices = Array.from({ length: 256 }, (_, id) => ({ id, name: className(id) }));
   const listId = useId();
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);

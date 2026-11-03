@@ -1,6 +1,6 @@
 import { t } from '../../../packages/save-core/src/i18n';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { CHARACTER_NAME_OPTIONS, CLASS_OPTIONS, ITEM_OPTIONS, SPELL_OPTIONS, LOCATION_OPTIONS, syncCharacterPromotion, stepCharacterLevel, growCharacterTo99 } from '@fq4r-editor/save-core';
+import { getLocationOptions, getCharacterNameOptions, getItemOptions, getSpellOptions, CHARACTER_NAME_OPTIONS, CLASS_OPTIONS, ITEM_OPTIONS, SPELL_OPTIONS, LOCATION_OPTIONS, syncCharacterPromotion, stepCharacterLevel, growCharacterTo99 } from '@fq4r-editor/save-core';
 import { ClassSelect } from './ClassSelect';
 import { STATUS_FLAGS, IDENTITY_FLAGS } from './character-flags';
 
@@ -130,6 +130,9 @@ export function CharacterEditor({ index, record, resetRecord, onClose, onChange,
       </header>
       <div className="character-dialog-body">
         {groups.map(group => <fieldset key={group.title}><legend>{t(group.title)}</legend><div className="character-field-grid">{group.fields.map(field => {
+          const options = field.offset === 2 ? [{ id: 0, name: '(이름없음)' }, ...getCharacterNameOptions()]
+            : field.offset === 21 ? [{ id: 0, name: '없음' }, ...getItemOptions()]
+            : field.offset === 23 ? getSpellOptions() : field.offset === 14 ? getLocationOptions() : field.options;
           const id = `character-field-${field.offset}`;
           const current = Number(values[field.offset]);
           // Compare stored bytes against the file baseline, including paired 16-bit fields.
@@ -139,11 +142,11 @@ export function CharacterEditor({ index, record, resetRecord, onClose, onChange,
             {field.bits ? <span className="character-field-label"><span className={`character-field-label-row${field.offset === 8 ? ' character-element-label-row' : ''}`}><span id={`${id}-label`}>{t(field.label)}</span>{field.offset === 8 && <span className="character-element-actions"><button type="button" className="character-element-max" onClick={() => changeValue(field, String(latestRecord.current[8] & 0x0f))}>{t("모든 속성 해제")}</button><button type="button" className="character-element-max" aria-label={t("모든 속성 강화")} onClick={() => changeValue(field, String(latestRecord.current[8] | 0xf0))}>{t("모든 속성 강화")}</button></span>}</span><small className="character-field-code" aria-hidden="true">{t(fieldCode(field))} · +{t(field.offset.toString(16).toUpperCase().padStart(2, '0'))}</small></span> : <label htmlFor={id}>{t(field.label)}<small>{t(fieldCode(field))} · +{t(field.offset.toString(16).toUpperCase().padStart(2, '0'))} · u{field.size * 8}</small></label>}
             {field.bits ? <div className={`character-bit-options${field.offset === 9 || field.offset === 13 ? ' character-bit-options-labeled' : ''}`} role="group" aria-labelledby={`${id}-label`}>{field.bits.map(bit => <label key={bit.mask} title={t(bit.hint)} className={((latestRecord.current[field.offset] ^ resetRecord[field.offset]) & bit.mask) !== 0 ? 'character-flag-changed' : undefined}>
               <input type="checkbox" checked={(current & bit.mask) !== 0} onChange={event => changeValue(field, String(event.target.checked ? latestRecord.current[field.offset] | bit.mask : latestRecord.current[field.offset] & ~bit.mask))} />{t(bit.name)}
-            </label>)}</div> : field.offset === 12 || field.offset === 20 ? <ClassSelect id={id} label={field.label} value={current} onChange={value => changeValue(field, String(value))} /> : field.options ? <select id={id} aria-label={t(field.label)} value={values[field.offset]} onChange={event => changeValue(field, event.target.value)}>
-              {!field.options.some(option => option.id === current) && <option value={current}>{t(field.offset === 14 ? `미확인 지역 (0x${current.toString(16).toUpperCase().padStart(4, '0')})` : `미확인 ID ${current}`)}</option>}
-              {field.offset === 14 ? ['외부 맵', '내부 맵'].map((label, group) => <optgroup key={label} label={label}>
-                {field.options!.filter(option => option.id >>> 8 === group).map(option => <option key={option.id} value={option.id}>{t(option.name)} (0x{t(option.id.toString(16).toUpperCase().padStart(4, '0'))})</option>)}
-              </optgroup>) : field.options.map(option => <option key={option.id} value={option.id}>{t(option.name)} ({option.id})</option>)}
+            </label>)}</div> : field.offset === 12 || field.offset === 20 ? <ClassSelect id={id} label={field.label} value={current} onChange={value => changeValue(field, String(value))} /> : options ? <select id={id} aria-label={t(field.label)} value={values[field.offset]} onChange={event => changeValue(field, event.target.value)}>
+              {!options.some(option => option.id === current) && <option value={current}>{t(field.offset === 14 ? `미확인 지역 (0x${current.toString(16).toUpperCase().padStart(4, '0')})` : `미확인 ID ${current}`)}</option>}
+              {field.offset === 14 ? ['외부 맵', '내부 맵'].map((label, group) => <optgroup key={label} label={t(label)}>
+                {options.filter(option => option.id >>> 8 === group).map(option => <option key={option.id} value={option.id}>{t(option.name)} (0x{t(option.id.toString(16).toUpperCase().padStart(4, '0'))})</option>)}
+              </optgroup>) : options.map(option => <option key={option.id} value={option.id}>{t(option.name)} ({option.id})</option>)}
             </select> : <div className="character-number-control"><input id={id} aria-label={t(field.label)} type="number" inputMode="numeric" min={0} max={maximum(field)} step={1} required value={values[field.offset]}
               aria-invalid={!valid(values[field.offset], field)} onChange={event => changeValue(field, event.target.value)}
               onBlur={() => { if (!valid(values[field.offset], field)) setValues(previous => ({ ...previous, [field.offset]: String(initialValue(latestRecord.current, field)) })); }}

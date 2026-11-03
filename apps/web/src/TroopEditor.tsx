@@ -1,6 +1,6 @@
 import { t } from '../../../packages/save-core/src/i18n';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { characterName, LOCATION_OPTIONS, isAresLeaderSlot, ARES_MOVE_CONFIRM_MESSAGE, troopLocationName, troopCountryName, type Character, type TroopEdit, type TroopRecord, type TroopMacro, type TroopMemberSlot, type TroopAppendSource } from '@fq4r-editor/save-core';
+import { characterName, getLocationOptions, isAresLeaderSlot, ARES_MOVE_CONFIRM_MESSAGE, troopLocationName, troopCountryName, type Character, type TroopEdit, type TroopRecord, type TroopMacro, type TroopMemberSlot, type TroopAppendSource } from '@fq4r-editor/save-core';
 import { ClassImage } from './ClassImage';
 import { TroopRosterWorkspace } from './TroopRosterWorkspace';
 
@@ -17,9 +17,6 @@ function TroopNumber({ value, min = 0, max, label, onChange }: { value: number; 
 
 const hex = (value: number, width = 2) => value.toString(16).toUpperCase().padStart(width, '0');
 const nations = Array.from({ length: 16 }, (_, id) => ({ id, name: troopCountryName(id) }));
-// Omit unnamed exterior destinations without changing stored map IDs.
-// 저장된 맵 ID는 바꾸지 않고 이름 미확인 외부 지역만 선택 목록에서 제외합니다.
-const troopLocations = LOCATION_OPTIONS.filter(option => option.id >= 256 || !/^알\s*수\s*없는 지역/.test(option.name));
 const activities = [{ id: 0, name: '활성 (00)' }, { id: 1, name: '출현 대기 (10)' }, { id: 3, name: '비활성부대 (30)' }, { id: 13, name: '양산형 원본 (D0)' }];
 const affiliations = [{ id: 0, name: '아군 (0)' }, { id: 1, name: '적군 (1)' }, { id: 4, name: '중립 (04)' }, { id: 5, name: '중립 (05)' }];
 
@@ -59,6 +56,9 @@ export function TroopEditor({ record, original, characters, onChange, onClose, t
   const activity = state >>> 4, affiliation = state & 15, nation = record.header[5] & 15, displayGroup = record.header[5] >>> 4;
   const command = record.header[10];
   const commandMode = command === 0 || command >= 254 ? command : -1;
+  // Keep unknown exterior IDs out of the list in every display language.
+  // 표시 언어와 무관하게 미확인 외부 ID는 선택 목록에서 제외합니다.
+  const troopLocations = getLocationOptions().filter(option => option.id <= 100 || option.id >= 256);
   const regionOptions = troopLocations.filter(option => option.id > 0 && option.id <= 100);
   const displayedId = state === 0 ? id + 1 : id;
   const leader = byIndex.get(record.members[0]);

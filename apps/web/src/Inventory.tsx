@@ -1,6 +1,6 @@
 import { t } from '../../../packages/save-core/src/i18n';
 import { useEffect, useRef, useState } from 'react';
-import { ITEM_OPTIONS, itemDescription, itemName, type InventoryEdit, type ParsedSave } from '@fq4r-editor/save-core';
+import { getItemOptions, itemDescription, itemName, type InventoryEdit, type ParsedSave } from '@fq4r-editor/save-core';
 
 /** Keep temporary empty input local and commit only quantities from 0 through 99.
  * 임시 빈 입력은 내부에만 유지하고 0부터 99까지의 수량만 반영합니다. */
@@ -24,7 +24,8 @@ function Quantity({ slot, quantity, changed, onChange }: { slot: number; quantit
 export function Inventory({ items, identification, originalInventory, originalIdentification, onChange, onReset }: { originalInventory: Uint8Array; originalIdentification: Uint8Array; items: ParsedSave['inventory']; identification: number[]; onChange(change: InventoryEdit): void; onReset(): void }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const ownedIds = new Set(items.map(item => item.id));
-  const availableItems = ITEM_OPTIONS.filter(item => !ownedIds.has(item.id));
+  const itemOptions = getItemOptions();
+  const availableItems = itemOptions.filter(item => !ownedIds.has(item.id));
   const atLimit = items.length >= 256 || availableItems.length === 0;
   const picker = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -39,7 +40,7 @@ export function Inventory({ items, identification, originalInventory, originalId
   const clear = () => { source.current = null; setTarget(null); };
   return <>
     <div className="inventory-controls" ref={picker}>
-      <span className="item-count" aria-live="polite">ITEM SLOT : {t(String(items.length).padStart(2, '0'))}/{ITEM_OPTIONS.length}</span>
+      <span className="item-count" aria-live="polite">ITEM SLOT : {t(String(items.length).padStart(2, '0'))}/{itemOptions.length}</span>
       {atLimit ? <span className="item-limit">{t("-아이템 상한 도달-")}</span> : <button type="button" className="item-add" aria-expanded={pickerOpen} aria-controls="item-picker" onClick={() => setPickerOpen(open => !open)}>{t("+ 아이템 슬롯 추가")}</button>}
       {pickerOpen && !atLimit && <ul id="item-picker" className="item-picker" aria-label={t("추가할 아이템")}>{availableItems.map(item => <li key={item.id}>
         <button type="button" onClick={() => { if (!ownedIds.has(item.id) && !atLimit) onChange({ type: 'add', itemId: item.id }); setPickerOpen(false); }}>{t(item.name)}</button>

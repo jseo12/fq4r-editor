@@ -1,0 +1,294 @@
+{
+  "0": {
+    "description": "",
+    "alternateDescription": ""
+  },
+  "1": {
+    "description": "短い剣",
+    "alternateDescription": "短い剣"
+  },
+  "2": {
+    "description": "長い剣",
+    "alternateDescription": "長い剣"
+  },
+  "3": {
+    "description": "氷の剣",
+    "alternateDescription": "氷の剣"
+  },
+  "4": {
+    "description": "炎の剣",
+    "alternateDescription": "炎の剣"
+  },
+  "5": {
+    "description": "強力だが防御が下がる",
+    "alternateDescription": "強力だが防御が下がる"
+  },
+  "6": {
+    "description": "まれに双方を瀕死にさせる",
+    "alternateDescription": "まれに双方を瀕死にさせる"
+  },
+  "7": {
+    "description": "まれに使う者を混乱させる",
+    "alternateDescription": "まれに使う者を混乱させる"
+  },
+  "8": {
+    "description": "まれに使う者を負傷させる",
+    "alternateDescription": "まれに使う者を負傷させる"
+  },
+  "9": {
+    "description": "武将に強い",
+    "alternateDescription": "武将に強い"
+  },
+  "10": {
+    "description": "空を飛ぶものに強い",
+    "alternateDescription": "空を飛ぶものに強い"
+  },
+  "11": {
+    "description": "強力だが防御が下がる",
+    "alternateDescription": "強力だが防御が下がる"
+  },
+  "12": {
+    "description": "時として相手を凍結する",
+    "alternateDescription": "時として相手を凍結する"
+  },
+  "13": {
+    "description": "稲妻を放つ",
+    "alternateDescription": "稲妻を放つ"
+  },
+  "14": {
+    "description": "相手をはじき飛ばす",
+    "alternateDescription": "相手をはじき飛ばす"
+  },
+  "15": {
+    "description": "火の玉を放つ",
+    "alternateDescription": "火の玉を放つ"
+  },
+  "16": {
+    "description": "使う者を疲労させない",
+    "alternateDescription": "使う者を疲労しづらくする"
+  },
+  "17": {
+    "description": "槍",
+    "alternateDescription": "槍"
+  },
+  "18": {
+    "description": "突起のついた槍",
+    "alternateDescription": "突起のついた槍"
+  },
+  "19": {
+    "description": "戦闘中部下の攻撃力アップ",
+    "alternateDescription": "戦闘中部下の攻撃力アップ"
+  },
+  "20": {
+    "description": "クリティカルヒットがでる",
+    "alternateDescription": "クリティカルヒットがでる"
+  },
+  "21": {
+    "description": "大型の斧",
+    "alternateDescription": "大型の斧"
+  },
+  "22": {
+    "description": "相手をはじき飛ばす",
+    "alternateDescription": "相手をはじき飛ばす"
+  },
+  "23": {
+    "description": "打撃武器",
+    "alternateDescription": "打撃武器"
+  },
+  "24": {
+    "description": "相手をはじき飛ばす",
+    "alternateDescription": "相手をはじき飛ばす"
+  },
+  "25": {
+    "description": "短い間隔で魔法が使える",
+    "alternateDescription": "少し短い間隔で魔法が使える"
+  },
+  "26": {
+    "description": "マジックに無敵",
+    "alternateDescription": "マジックに無敵"
+  },
+  "27": {
+    "description": "障害物を通りぬける",
+    "alternateDescription": "障害物を通りぬける"
+  },
+  "28": {
+    "description": "短い間隔で撃てる",
+    "alternateDescription": "短い間隔で撃てる"
+  },
+  "29": {
+    "description": "相手を追いかける",
+    "alternateDescription": "相手を追いかける"
+  },
+  "30": {
+    "description": "鎖でできた軽い鎧",
+    "alternateDescription": "鎖でできた軽い鎧"
+  },
+  "31": {
+    "description": "丈夫な鎧",
+    "alternateDescription": "丈夫な鎧"
+  },
+  "32": {
+    "description": "マジック防御力が上がる",
+    "alternateDescription": "マジック防御力が上がる"
+  },
+  "33": {
+    "description": "強力な全身鎧",
+    "alternateDescription": "強力な全身鎧"
+  },
+  "34": {
+    "description": "防御率もあがる鎧",
+    "alternateDescription": "防御率もあがる鎧"
+  },
+  "35": {
+    "description": "リーダーにふさわしい鎧",
+    "alternateDescription": "リーダーにふさわしい鎧"
+  },
+  "36": {
+    "description": "矢などを跳ね返す",
+    "alternateDescription": "矢などを跳ね返す"
+  },
+  "37": {
+    "description": "攻撃力も高める鎧",
+    "alternateDescription": "攻撃力も高める鎧"
+  },
+  "38": {
+    "description": "敵に狙われない",
+    "alternateDescription": "敵に狙われづらくなる"
+  },
+  "39": {
+    "description": "まれに相手を混乱させる",
+    "alternateDescription": "まれに相手を混乱させる"
+  },
+  "40": {
+    "description": "まれに相手を石化させる",
+    "alternateDescription": "まれに相手を石化させる"
+  },
+  "41": {
+    "description": "防御率の上がる指輪",
+    "alternateDescription": "防御率の上がる指輪"
+  },
+  "42": {
+    "description": "防御率が大きく上がる指輪",
+    "alternateDescription": "防御率が大きく上がる指輪"
+  },
+  "43": {
+    "description": "攻撃率、防御率が上がる",
+    "alternateDescription": "攻撃率、防御率が上がる"
+  },
+  "44": {
+    "description": "攻撃率の上がる指輪",
+    "alternateDescription": "攻撃率の上がる指輪"
+  },
+  "45": {
+    "description": "回復率も上がる指輪",
+    "alternateDescription": "回復率も上がる指輪"
+  },
+  "46": {
+    "description": "火の敵から身を守る",
+    "alternateDescription": "火の敵からの防御を強化する"
+  },
+  "47": {
+    "description": "土の敵から身を守る",
+    "alternateDescription": "土の敵からの防御を強化する"
+  },
+  "48": {
+    "description": "風の敵から身を守る",
+    "alternateDescription": "風の敵からの防御を強化する"
+  },
+  "49": {
+    "description": "水の敵から身を守る",
+    "alternateDescription": "水の敵からの防御を強化する"
+  },
+  "50": {
+    "description": "使うと味方のＦＴを吸収する",
+    "alternateDescription": "使うと味方のＦＴを吸収する"
+  },
+  "51": {
+    "description": "戦闘中部下の攻撃率が上がる",
+    "alternateDescription": "戦闘中部下の攻撃率が上がる"
+  },
+  "52": {
+    "description": "使うと味方のＨＰを吸収する",
+    "alternateDescription": "使うと味方のＨＰを吸収する"
+  },
+  "53": {
+    "description": "使うとバードマンを召喚する",
+    "alternateDescription": "使うとバードマンを召喚する"
+  },
+  "54": {
+    "description": "使うと天使を召喚する",
+    "alternateDescription": "使うと天使を召喚する"
+  },
+  "55": {
+    "description": "使うと精霊を召喚する",
+    "alternateDescription": "使うと精霊を召喚する"
+  },
+  "56": {
+    "description": "使うと精霊を召喚する",
+    "alternateDescription": "使うと精霊を召喚する"
+  },
+  "57": {
+    "description": "使うと精霊を召喚する",
+    "alternateDescription": "使うと精霊を召喚する"
+  },
+  "58": {
+    "description": "使うとバレスタを召喚する",
+    "alternateDescription": "使うとバレスタを召喚する"
+  },
+  "59": {
+    "description": "使うと味方のＨＰが回復する",
+    "alternateDescription": "使うと味方のＨＰが回復する"
+  },
+  "60": {
+    "description": "使うと火の玉を放つ",
+    "alternateDescription": "使うと火の玉を放つ"
+  },
+  "61": {
+    "description": "使うと稲妻を放つ",
+    "alternateDescription": "使うと稲妻を放つ"
+  },
+  "62": {
+    "description": "使うと氷を降らせる",
+    "alternateDescription": "使うと氷を降らせる"
+  },
+  "63": {
+    "description": "使うと死霊を召喚する",
+    "alternateDescription": "使うと死霊を召喚する"
+  },
+  "64": {
+    "description": "使うと双方に大ダメージ",
+    "alternateDescription": "使うと双方に大ダメージ"
+  },
+  "65": {
+    "description": "使うと敵の強さがわかる",
+    "alternateDescription": "使うと敵の強さがわかる"
+  },
+  "66": {
+    "description": "使うと基本攻撃が上がる",
+    "alternateDescription": "使うと基本攻撃が上がる"
+  },
+  "67": {
+    "description": "馬に使うと基本攻撃率上がる",
+    "alternateDescription": "馬に使うと基本攻撃率上がる"
+  },
+  "68": {
+    "description": "使うと味方のＨＰが回復する",
+    "alternateDescription": "使うと味方のＨＰが回復する"
+  },
+  "69": {
+    "description": "使うと疲労が回復",
+    "alternateDescription": "使うと疲労が回復"
+  },
+  "70": {
+    "description": "使うと味方の毒が消える",
+    "alternateDescription": "使うと味方の毒が消える"
+  },
+  "71": {
+    "description": "使うと味方の石化が治る",
+    "alternateDescription": "使うと味方の石化が治る"
+  },
+  "72": {
+    "description": "持っている人は生き返れる",
+    "alternateDescription": "持っている人は生き返れる"
+  }
+}

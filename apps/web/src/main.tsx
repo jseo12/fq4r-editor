@@ -5,7 +5,7 @@ import { version as projectVersion } from '../../../package.json';
 import { RosterCharacterEditor } from './RosterCharacterEditor';
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { parseSave, editTroop, swapTroopMembers, replaceTroopMember, appendTroopMember, type TroopAppendSource, type TroopMemberSlot, applyTroopMacro, readTroopRecords, type TroopRecord, type TroopMacro, editOverview, editMagicLists, editInventory, editCharacter, repairChecksumBlock, prepareSave, inspectChecksums, SAVE_SIZE, type Difficulty, type ParsedSave, type SpellList, type InventoryEdit, type TroopEdit, type DesktopBridge, type InputResult } from '@fq4r-editor/save-core';
+import { locationName, parseSave, editTroop, swapTroopMembers, replaceTroopMember, appendTroopMember, type TroopAppendSource, type TroopMemberSlot, applyTroopMacro, readTroopRecords, type TroopRecord, type TroopMacro, editOverview, editMagicLists, editInventory, editCharacter, repairChecksumBlock, prepareSave, inspectChecksums, SAVE_SIZE, type Difficulty, type ParsedSave, type SpellList, type InventoryEdit, type TroopEdit, type DesktopBridge, type InputResult } from '@fq4r-editor/save-core';
 import './themes/index.css';
 import './styles.css';
 import { Overview } from './Overview';
@@ -313,7 +313,7 @@ function App() {
           <div className="folder-metadata"><p className="folder-path" title={folder.folder}>{folder.folder}</p><span className="folder-save-count">{folder.entries.length}{t("개의 세이브")}</span></div>
           <ul className="save-file-list" aria-label={t("폴더의 세이브 목록")}>{folder.entries.map(entry => <li key={entry.id}>
             <button className={changedSaveNames.has(entry.name) ? 'save-summary-changed' : undefined} disabled={busy} aria-current={selected === entry.id ? 'true' : undefined} onClick={() => chooseEntry(entry.id)}>
-              <span className="save-location">{t(entry.summary.location)}</span><span>{t(number(entry.summary.playMinutes))}{t("분")}</span><span>{t(entry.summary.difficulty)}</span><span className="save-filename">{entry.name}</span>
+              <span className="save-location">{t(locationName(entry.summary.locationId))}</span><span>{t(number(entry.summary.playMinutes))}{t("분")}</span><span>{t(entry.summary.difficulty)}</span><span className="save-filename">{entry.name}</span>
             </button>
           </li>)}</ul>
           {busy && <p role="status">{t("세이브 파일을 확인하고 있습니다…")}</p>}

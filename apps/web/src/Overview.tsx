@@ -1,6 +1,6 @@
 import { t, formatNumber, formatMessage } from '../../../packages/save-core/src/i18n';
 import { useEffect, useState } from 'react';
-import { DIFFICULTIES, GOLD_UNIT, MAX_GOLD_AMOUNT, MAX_PLAY_MINUTES, type Difficulty, type ParsedSave } from '@fq4r-editor/save-core';
+import { locationName, DIFFICULTIES, GOLD_UNIT, MAX_GOLD_AMOUNT, MAX_PLAY_MINUTES, type Difficulty, type ParsedSave } from '@fq4r-editor/save-core';
 
 type Changes = { playMinutes?: number; gold?: number; difficulty?: Difficulty };
 const number = formatNumber;
@@ -44,7 +44,7 @@ export function Overview({ save, originalSummary, onChange, onRepairChecksum }: 
   return <>
     <ul className="overview-list" aria-label={t("세이브 개요")}>
       <li><span className="overview-label">{t("세이브 요약")}</span><span className="save-counts">{formatMessage('캐릭터 {0}명 · 아이템 박스 {1}슬롯 · 부대 {2}개 · 마법 목록 {3}개', [save.characters.length, save.inventory.length, save.troops.length, save.magic.length])}</span></li>
-      <li><span className="overview-label">{t("위치")}</span><span>{t(save.summary.location)}</span></li>
+      <li><span className="overview-label">{t("위치")}</span><span>{t(locationName(save.summary.locationId))}</span></li>
       <li><label className="overview-label" htmlFor="play-minutes">{t("플레이 시간")}</label><NumericField changed={save.summary.playMinutes !== originalSummary.playMinutes} id="play-minutes" value={save.summary.playMinutes} max={MAX_PLAY_MINUTES} unit="분" onChange={playMinutes => onChange({ playMinutes })} /></li>
       <li><label className="overview-label" htmlFor="difficulty">{t("난이도")}</label><select className={save.summary.difficulty !== originalSummary.difficulty ? 'overview-value-changed' : undefined} id="difficulty" value={save.summary.difficulty} onChange={event => onChange({ difficulty: event.target.value as Difficulty })}>{DIFFICULTIES.map(name => <option key={name} value={name}>{t(name)}</option>)}</select></li>
       <li><label className="overview-label" htmlFor="gold">{t("골드")}</label><NumericField macros changed={save.summary.gold !== originalSummary.gold} id="gold" value={save.summary.gold * GOLD_UNIT} max={MAX_GOLD_AMOUNT} step={GOLD_UNIT} unit="G" onChange={gold => onChange({ gold: gold / GOLD_UNIT })} /></li>

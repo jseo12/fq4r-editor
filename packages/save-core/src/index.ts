@@ -1,13 +1,13 @@
+import { gameName, gameNameTable, gameItemDescription } from './game-names.ts';
+import { getLocale, t, type Locale } from './i18n.ts';
 import itemDetails from './item-details.json' with { type: 'json' };
 import itemRanking from './item-ranking.json' with { type: 'json' };
-import internalLocations from './internal-locations.json' with { type: 'json' };
 import nations from './nations.json' with { type: 'json' };
 import powerTables from './power-tables.json' with { type: 'json' };
-import locations from './locations.json' with { type: 'json' };
-import items from './items.json' with { type: 'json' };
-import spells from './spells.json' with { type: 'json' };
-import characterNames from './character-names.json' with { type: 'json' };
-import classNames from './class-names.json' with { type: 'json' };
+import items from './game-data/ko/items.json' with { type: 'json' };
+import spells from './game-data/ko/spells.json' with { type: 'json' };
+import characterNames from './game-data/ko/character-names.json' with { type: 'json' };
+import classNames from './game-data/ko/class-names.json' with { type: 'json' };
 
 /** Describe registered class skills, resolving the mounted Ares class to its spell list.
  * 말아레스 직업의 목록 연결을 반영하여 직업에 등록된 스킬 사용 여부를 표시합니다. */
@@ -90,24 +90,24 @@ export function troopCountryColor(group: number): string | undefined {
   return ['#F7F7F7', '#F70000', '#F7F700', '#0000F7', '#19945A', '#E600E6', '#00C5F7', '#F7F700', '#F70000', '#F70000', '#F70000', '#F70000', '#F70000', '#F70000', '#F70000', '#F70000'][group & 0x0f];
 }
 
-export function locationName(id: number): string {
-  return (internalLocations as Record<string, string>)[id] || (locations as Record<string, string>)[id] || `알 수 없는 지역 (0x${id.toString(16).toUpperCase()})`;
+export function locationName(id: number, locale: Locale = getLocale()): string {
+  return gameName('internalLocations', id, locale) || gameName('locations', id, locale) || t(`알 수 없는 지역 (0x${id.toString(16).toUpperCase()})`, locale);
 }
 /** Interpret troop location types for display; unknown upper bytes mean an exterior map.
  * 부대 위치의 표시용 형식을 해석하며 알 수 없는 상위 바이트는 외부 맵으로 간주합니다. */
-export function troopLocationName(mapId: number): string {
-  return locationName((mapId >>> 8) === 1 ? mapId : mapId & 0xff);
+export function troopLocationName(mapId: number, locale: Locale = getLocale()): string {
+  return locationName((mapId >>> 8) === 1 ? mapId : mapId & 0xff, locale);
 }
 
-export function itemName(id: number): string { return (items as Record<string, string>)[id] || `아이템 0x${id.toString(16).toUpperCase()}`; }
+export function itemName(id: number, locale: Locale = getLocale()): string { return gameName('items', id, locale) || t(`아이템 0x${id.toString(16).toUpperCase()}`, locale); }
 /** Format all four signed modifiers when any is nonzero, followed by game text.
  * 하나라도 변화가 있으면 부호 있는 능력치 4개를 표시하고 게임 설명을 이어 붙입니다. */
-export function itemDescription(id: number): string {
+export function itemDescription(id: number, locale: Locale = getLocale(), alternate = false): string {
   const detail = (itemDetails as Record<string, { AT: number; AR: number; DF: number; DR: number; description: string }>)[id];
   if (!detail) return '';
   const stats = ['AT', 'AR', 'DF', 'DR'] as const;
   const modifiers = stats.some(stat => detail[stat] !== 0) ? stats.map(stat => `${stat}${detail[stat] < 0 ? '-' : '+'}${Math.abs(detail[stat]).toString().padStart(2, '0')}`).join(' ') : '';
-  return [modifiers, detail.description].filter(Boolean).join(' ');
+  return [modifiers, gameItemDescription(id, locale, alternate)].filter(Boolean).join(' ');
 }
 
 /** Estimate general item utility from extracted modifiers and description effects.
@@ -125,7 +125,7 @@ export function itemQualityScore(id: number): number {
   return score;
 }
 
-export function spellName(id: number): string { return (spells as Record<string, string>)[id] || `마법 0x${id.toString(16).toUpperCase()}`; }
+export function spellName(id: number, locale: Locale = getLocale()): string { return gameName('spells', id, locale) || t(`마법 0x${id.toString(16).toUpperCase()}`, locale); }
 
 export const CHARACTER_NAME_OPTIONS = Object.entries(characterNames).filter(([id, name]) => Number(id) > 0 && name).map(([id, name]) => ({ id: Number(id), name: name! }));
 export const CLASS_OPTIONS = Object.entries(classNames).filter(([, name]) => name).map(([id, name]) => ({ id: Number(id), name: name! }));
@@ -134,22 +134,45 @@ export const CLASS_OPTIONS = Object.entries(classNames).filter(([, name]) => nam
  * 외부·내부 맵 ID를 제공하며 목록 밖의 저장값은 변환하지 않습니다. */
 export const LOCATION_OPTIONS = Array.from({ length: 512 }, (_, id) => ({
   id,
-  name: id === 0 ? '없음' : locationName(id),
+  name: id === 0 ? '없음' : locationName(id, 'ko'),
 }));
 
 export const ITEM_OPTIONS = Object.entries(items).filter(([id, name]) => Number(id) > 0 && name).map(([id, name]) => ({ id: Number(id), name })).sort((a, b) => a.id - b.id);
 
-export const SPELL_OPTIONS = Object.keys(spells).map(Number).sort((a, b) => a - b).map(id => ({ id, name: id === 0 ? '없음' : spellName(id) }));
+export const SPELL_OPTIONS = Object.keys(spells).map(Number).sort((a, b) => a - b).map(id => ({ id, name: id === 0 ? '없음' : spellName(id, 'ko') }));
+
+/** Build display options for the current locale without changing serialized IDs.
+ * 직렬화 ID는 바꾸지 않고 현재 언어의 표시용 선택 항목을 구성합니다. */
+export function getCharacterNameOptions(locale: Locale = getLocale()) {
+  return Object.keys(gameNameTable('characters', locale)).map(Number).filter(id => id > 0 && gameName('characters', id, locale))
+    .sort((a, b) => a - b).map(id => ({ id, name: characterName(id, locale) }));
+}
+export function getClassOptions(locale: Locale = getLocale()) {
+  return Object.keys(gameNameTable('classes', locale)).map(Number).filter(id => gameName('classes', id, locale))
+    .sort((a, b) => a - b).map(id => ({ id, name: className(id, locale) }));
+}
+export function getItemOptions(locale: Locale = getLocale()) {
+  return ITEM_OPTIONS.map(({ id }) => ({ id, name: itemName(id, locale) }));
+}
+export function getSpellOptions(locale: Locale = getLocale()) {
+  return SPELL_OPTIONS.map(({ id }) => ({ id, name: id === 0 ? t('없음', locale) : spellName(id, locale) }));
+}
+
+/** Build map labels at render time while preserving the original ID domain.
+ * 원래 ID 범위는 유지하고 렌더링 시점의 언어로 맵 이름을 구성합니다. */
+export function getLocationOptions(locale: Locale = getLocale()) {
+  return LOCATION_OPTIONS.map(({ id }) => ({ id, name: id === 0 ? t('없음', locale) : locationName(id, locale) }));
+}
 
 /** Resolve decoded names; display unnamed records without substituting class names.
  * 복원한 이름을 조회하며 이름 없는 레코드를 직업명으로 대체하지 않습니다. */
-export function characterName(nameId: number): string {
-  if (nameId === 0) return '(이름없음)';
-  return (characterNames as Record<string, string | null>)[nameId] || `이름 미확인 (0x${nameId.toString(16).toUpperCase().padStart(4, '0')})`;
+export function characterName(nameId: number, locale: Locale = getLocale()): string {
+  if (nameId === 0) return t('(이름없음)', locale);
+  return gameName('characters', nameId, locale) || t(`이름 미확인 (0x${nameId.toString(16).toUpperCase().padStart(4, '0')})`, locale);
 }
 
-export function className(id: number): string {
-  return (classNames as Record<string, string | null>)[id] || `직업 미확인 (0x${id.toString(16).toUpperCase().padStart(2, '0')})`;
+export function className(id: number, locale: Locale = getLocale()): string {
+  return gameName('classes', id, locale) || t(`직업 미확인 (0x${id.toString(16).toUpperCase().padStart(2, '0')})`, locale);
 }
 
 /** Decode the packed difficulty exactly as the game's save-list renderer does.
@@ -236,7 +259,7 @@ export function parseSave(data: Uint8Array, checksumSnapshot?: Checksum[]): Pars
   const u32 = (offset: number) => view.getUint32(offset, true);
   const warnings: string[] = [];
   const locationId = u16(0x204);
-  const summary = { locationId, location: locationName(locationId), playMinutes: u32(0x200), difficulty: difficultyName(u16(0x20c)), gold: u32(0x692) };
+  const summary = { locationId, location: locationName(locationId, 'ko'), playMinutes: u32(0x200), difficulty: difficultyName(u16(0x20c)), gold: u32(0x692) };
   const characters = Array.from({ length: 640 }, (_, index) => {
     const p = 0x9a6 + index * 32;
     return { index, nameId: u16(p + 2), classId: data[p + 12], lead: data[p + 7], level: data[p + 24], hp: u16(p + 26), recoveryRaw: data[p + 25], attack: data[p + 28], hit: data[p + 29], defense: data[p + 30], evasion: data[p + 31], projectileDefensePenalty: data[p + 17], projectileAttack: data[p + 16], magicDefensePenalty: data[p + 18], fatigue: data[p + 10], elementFlags: data[p + 8], item: data[p + 21], skill: data[p + 23] };

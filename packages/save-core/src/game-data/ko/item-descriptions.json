@@ -1,0 +1,294 @@
+{
+  "0": {
+    "description": "",
+    "alternateDescription": ""
+  },
+  "1": {
+    "description": "짧은 검",
+    "alternateDescription": "짧은 검"
+  },
+  "2": {
+    "description": "긴 검",
+    "alternateDescription": "긴 검"
+  },
+  "3": {
+    "description": "얼음 검",
+    "alternateDescription": "얼음 검"
+  },
+  "4": {
+    "description": "불꽃의 검",
+    "alternateDescription": "불꽃의 검"
+  },
+  "5": {
+    "description": "강력하지만 방어가 허술",
+    "alternateDescription": "강력하지만 방어가 허술"
+  },
+  "6": {
+    "description": "드물게 쌍방을 빈사시킴",
+    "alternateDescription": "드물게 쌍방을 빈사시킴"
+  },
+  "7": {
+    "description": "간혹 사용자를 혼란시킴",
+    "alternateDescription": "간혹 사용자를 혼란시킴"
+  },
+  "8": {
+    "description": "간혹 사용자를 부상입힘",
+    "alternateDescription": "간혹 사용자를 부상입힘"
+  },
+  "9": {
+    "description": "무장에게 강하다",
+    "alternateDescription": "무장에게 강하다"
+  },
+  "10": {
+    "description": "하늘을 나는 것에 강함",
+    "alternateDescription": "하늘을 나는 것에 강함"
+  },
+  "11": {
+    "description": "강력하지만 방어가 허술",
+    "alternateDescription": "강력하지만 방어가 허술"
+  },
+  "12": {
+    "description": "때로는 상대를 동결한다",
+    "alternateDescription": "때로는 상대를 동결한다"
+  },
+  "13": {
+    "description": "번개를 친다",
+    "alternateDescription": "번개를 친다"
+  },
+  "14": {
+    "description": "상대를 냅다 밀친다",
+    "alternateDescription": "상대를 냅다 밀친다"
+  },
+  "15": {
+    "description": "불덩이를 던진다",
+    "alternateDescription": "불덩이를 던진다"
+  },
+  "16": {
+    "description": "쉽게 지치지 않도록 함",
+    "alternateDescription": "쉽게 지치지 않도록 함"
+  },
+  "17": {
+    "description": "창",
+    "alternateDescription": "창"
+  },
+  "18": {
+    "description": "돌기가 달린 창",
+    "alternateDescription": "돌기가 달린 창"
+  },
+  "19": {
+    "description": "전투중 부하 공격력향상",
+    "alternateDescription": "전투중 부하 공격력향상"
+  },
+  "20": {
+    "description": "크리티컬 히트가 터진다",
+    "alternateDescription": "크리티컬 히트가 터진다"
+  },
+  "21": {
+    "description": "대형 도끼",
+    "alternateDescription": "대형 도끼"
+  },
+  "22": {
+    "description": "상대를 냅다 밀친다",
+    "alternateDescription": "상대를 냅다 밀친다"
+  },
+  "23": {
+    "description": "타격 무기",
+    "alternateDescription": "타격 무기"
+  },
+  "24": {
+    "description": "상대를 냅다 밀친다",
+    "alternateDescription": "상대를 냅다 밀친다"
+  },
+  "25": {
+    "description": "짧은 간격으로 마법사용",
+    "alternateDescription": "짧은 간격으로 마법사용"
+  },
+  "26": {
+    "description": "마법에 무적",
+    "alternateDescription": "마법에 무적"
+  },
+  "27": {
+    "description": "장애물을 지나간다",
+    "alternateDescription": "장애물을 지나간다"
+  },
+  "28": {
+    "description": "짧은 간격으로 쏜다",
+    "alternateDescription": "짧은 간격으로 쏜다"
+  },
+  "29": {
+    "description": "상대를 뒤쫓는다",
+    "alternateDescription": "상대를 뒤쫓는다"
+  },
+  "30": {
+    "description": "쇠사슬로 만든 경량갑옷",
+    "alternateDescription": "쇠사슬로 만든 경량갑옷"
+  },
+  "31": {
+    "description": "튼튼한 갑옷",
+    "alternateDescription": "튼튼한 갑옷"
+  },
+  "32": {
+    "description": "마술 방어력이 향상된다",
+    "alternateDescription": "마술 방어력이 향상된다"
+  },
+  "33": {
+    "description": "강력한 전신 갑옷",
+    "alternateDescription": "강력한 전신 갑옷"
+  },
+  "34": {
+    "description": "방어율도 올라가는 갑옷",
+    "alternateDescription": "방어율도 올라가는 갑옷"
+  },
+  "35": {
+    "description": "리더에 어울리는 갑옷",
+    "alternateDescription": "리더에 어울리는 갑옷"
+  },
+  "36": {
+    "description": "화살 등을 되튀기다",
+    "alternateDescription": "화살 등을 되튀기다"
+  },
+  "37": {
+    "description": "공격력도 높이는 갑옷",
+    "alternateDescription": "공격력도 높이는 갑옷"
+  },
+  "38": {
+    "description": "적이 겨누기 어렵게 됨",
+    "alternateDescription": "적이 겨누기 어렵게 됨"
+  },
+  "39": {
+    "description": "드물게 상대를 혼란시킴",
+    "alternateDescription": "드물게 상대를 혼란시킴"
+  },
+  "40": {
+    "description": "드물게 상대를 석화시킴",
+    "alternateDescription": "드물게 상대를 석화시킴"
+  },
+  "41": {
+    "description": "방어율이 오르는 반지",
+    "alternateDescription": "방어율이 오르는 반지"
+  },
+  "42": {
+    "description": "방어율이 크게 오른다",
+    "alternateDescription": "방어율이 크게 오른다"
+  },
+  "43": {
+    "description": "공격률 방어율 오른다",
+    "alternateDescription": "공격률 방어율 오른다"
+  },
+  "44": {
+    "description": "공격률이 올라가는 반지",
+    "alternateDescription": "공격률이 올라가는 반지"
+  },
+  "45": {
+    "description": "회복률도 올라가는 반지",
+    "alternateDescription": "회복률도 올라가는 반지"
+  },
+  "46": {
+    "description": "불속성 방어력 강화",
+    "alternateDescription": "불속성 방어력 강화"
+  },
+  "47": {
+    "description": "땅속성 방어력 강화",
+    "alternateDescription": "땅속성 방어력 강화"
+  },
+  "48": {
+    "description": "바람속성 방어력 강화",
+    "alternateDescription": "바람속성 방어력 강화"
+  },
+  "49": {
+    "description": "물속성 방어력 강화",
+    "alternateDescription": "물속성 방어력 강화"
+  },
+  "50": {
+    "description": "사용시 아군의 FT 흡수",
+    "alternateDescription": "사용시 아군의 FT 흡수"
+  },
+  "51": {
+    "description": "부하 공격률 상승",
+    "alternateDescription": "부하 공격률이 상승"
+  },
+  "52": {
+    "description": "사용시 아군의 HP 흡수",
+    "alternateDescription": "사용시 아군의 HP 흡수"
+  },
+  "53": {
+    "description": "사용시 버드맨을 소환",
+    "alternateDescription": "사용시 버드맨을 소환"
+  },
+  "54": {
+    "description": "사용시 천사를 소환한다",
+    "alternateDescription": "사용시 천사를 소환한다"
+  },
+  "55": {
+    "description": "사용시 정령을 소환한다",
+    "alternateDescription": "사용시 정령을 소환한다"
+  },
+  "56": {
+    "description": "사용시 정령을 소환한다",
+    "alternateDescription": "사용시 정령을 소환한다"
+  },
+  "57": {
+    "description": "사용시 정령을 소환한다",
+    "alternateDescription": "사용시 정령을 소환한다"
+  },
+  "58": {
+    "description": "사용시 바레스타를 소환",
+    "alternateDescription": "사용시 바레스타를 소환"
+  },
+  "59": {
+    "description": "사용시 아군의 HP 회복",
+    "alternateDescription": "사용시 아군의 HP 회복"
+  },
+  "60": {
+    "description": "사용시 불덩이를 쏜다",
+    "alternateDescription": "사용시 불덩이를 쏜다"
+  },
+  "61": {
+    "description": "사용시 번개를 친다",
+    "alternateDescription": "사용시 번개를 친다"
+  },
+  "62": {
+    "description": "사용시 얼음을 내린다",
+    "alternateDescription": "사용시 얼음을 내린다"
+  },
+  "63": {
+    "description": "사용시 죽은 영혼 소환",
+    "alternateDescription": "사용시 죽은 영혼 소환"
+  },
+  "64": {
+    "description": "사용시 쌍방에 큰 피해",
+    "alternateDescription": "사용시 쌍방에 큰 피해"
+  },
+  "65": {
+    "description": "사용시 적의 힘을 본다",
+    "alternateDescription": "사용시 적의 힘을 본다"
+  },
+  "66": {
+    "description": "사용시 기본 공격 오름",
+    "alternateDescription": "사용시 기본 공격 오름"
+  },
+  "67": {
+    "description": "사용시 기본공격률 오름",
+    "alternateDescription": "사용시 기본공격률 오름"
+  },
+  "68": {
+    "description": "사용하면 아군의 HP회복",
+    "alternateDescription": "사용시 아군의 HP 회복"
+  },
+  "69": {
+    "description": "사용하면 피로가 회복됨",
+    "alternateDescription": "사용하면 피로가 회복됨"
+  },
+  "70": {
+    "description": "쓰면 아군 독이 없어짐",
+    "alternateDescription": "쓰면 아군의 독 없어짐"
+  },
+  "71": {
+    "description": "쓰면 아군 석화가 나음",
+    "alternateDescription": "쓰면 아군의 석화 나음"
+  },
+  "72": {
+    "description": "갖고있는 자는 되살아남",
+    "alternateDescription": "갖고 있으면 되살아남"
+  }
+}

@@ -1,4 +1,4 @@
-import { t } from '../../../packages/save-core/src/i18n';
+import { t, getLocale } from '../../../packages/save-core/src/i18n';
 import { useEffect, useMemo, useState } from 'react';
 import { CharacterEditor } from './CharacterEditor';
 import { ClassImage } from './ClassImage';
@@ -37,7 +37,7 @@ export function Characters({ ranking = false, magic, characters, troops, scope, 
   // 필터된 복사본만 정렬하며 저장 데이터의 캐릭터 슬롯과 ID는 유지합니다.
   const powers = new Map(visibleCharacters.map(character => [character.index, characterPower(character)]));
   visibleCharacters.sort((a, b) => (ranking ? forecasts.get(b.index)!.max - forecasts.get(a.index)!.max : sort === 'name'
-    ? characterName(a.nameId).localeCompare(characterName(b.nameId), 'ko')
+    ? characterName(a.nameId).localeCompare(characterName(b.nameId), getLocale() === 'ja' ? 'ja' : 'ko')
     : sort === 'power' ? powers.get(b.index)! - powers.get(a.index)! : 0) || a.index - b.index);
   const editingPosition = visibleCharacters.findIndex(character => character.index === editing);
   const previous = visibleCharacters[editingPosition - 1]?.index;

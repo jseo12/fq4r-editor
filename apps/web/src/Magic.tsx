@@ -1,5 +1,5 @@
 import { t } from '../../../packages/save-core/src/i18n';
-import { className, SPELL_OPTIONS, spellName, type SpellList } from '@fq4r-editor/save-core';
+import { className, getSpellOptions, spellName, type SpellList } from '@fq4r-editor/save-core';
 import { ClassImage } from './ClassImage';
 
 const unsafeClassIds = new Set([0x85, 0x89, 0x8a, 0x8b, 0x8c]);
@@ -7,6 +7,7 @@ const unsafeClassIds = new Set([0x85, 0x89, 0x8a, 0x8b, 0x8c]);
 /** Edit five class spell slots without writing the original save file.
  * 원본 파일을 쓰지 않고 직업별 마법 슬롯 5개를 편집합니다. */
 export function Magic({ lists, originalLists, onChange, onReset }: { lists: SpellList[]; originalLists: SpellList[]; onChange(list: number, slot: number, id: number): void; onReset(list: number): void }) {
+  const spellOptions = getSpellOptions();
   return <div className="magic-list">{lists.map((list, index) => {
     const original = originalLists[index];
     const slotChanged = (slot: number) => (list.spells[slot] ?? 0) !== (original?.spells[slot] ?? 0);
@@ -18,8 +19,8 @@ export function Magic({ lists, originalLists, onChange, onReset }: { lists: Spel
       const label = `${className(list.classId)} 마법 ${slot + 1}`;
       return <div className="magic-slot" key={slot}>
         <select className={slotChanged(slot) ? 'magic-spell-changed' : undefined} value={id} aria-label={t(label)} onChange={event => onChange(index, slot, Number(event.target.value))}>
-          {!SPELL_OPTIONS.some(option => option.id === id) && <option value={id}>{t(spellName(id))}</option>}
-          {SPELL_OPTIONS.map(option => <option key={option.id} value={option.id}>{t(option.name)}</option>)}
+          {!spellOptions.some(option => option.id === id) && <option value={id}>{t(spellName(id))}</option>}
+          {spellOptions.map(option => <option key={option.id} value={option.id}>{t(option.name)}</option>)}
         </select>
         <button type="button" className="magic-delete" disabled={id === 0} title={t("마법 삭제")} aria-label={t(`${label} 삭제`)} onClick={() => onChange(index, slot, 0)}>×</button>
       </div>;

@@ -1786,7 +1786,7 @@ test('desktop bridge: returning to save selection refreshes disk summaries', asy
     await page.addInitScript(({ data, summary }) => {
       let scans = 0;
       Object.defineProperty(window, 'fq4rDesktop', { value: {
-        restoreFolder: async () => ({ kind: 'folder', folder: 'C:/Game', errors: [], entries: [{ id: `scan-${++scans}`, name: 'save00.dat', summary: scans === 1 ? summary : { ...summary, location: '갱신된 위치', playMinutes: 123, difficulty: '고투' } }] }),
+        restoreFolder: async () => ({ kind: 'folder', folder: 'C:/Game', errors: [], entries: [{ id: `scan-${++scans}`, name: 'save00.dat', summary: scans === 1 ? summary : { ...summary, locationId: 10, location: '켄트마을', playMinutes: 123, difficulty: '고투' } }] }),
         loadSave: async (id: string) => ({ name: 'save00.dat', saveId: id, data: new Uint8Array(data) }),
       } });
     }, { data, summary });
@@ -1794,7 +1794,7 @@ test('desktop bridge: returning to save selection refreshes disk summaries', asy
     await page.getByRole('list', { name: '폴더의 세이브 목록' }).getByRole('button').click();
     await page.getByRole('button', { name: '세이브 선택으로', exact: true }).click();
     const list = page.getByRole('list', { name: '폴더의 세이브 목록' });
-    await expect(list).toContainText('갱신된 위치'); await expect(list).toContainText('123분'); await expect(list).toContainText('고투');
+    await expect(list).toContainText('켄트마을'); await expect(list).toContainText('123분'); await expect(list).toContainText('고투');
     await expect(list.getByRole('button')).toHaveCSS('color', 'rgb(247, 247, 0)');
     await expect(list.locator('.save-filename')).toHaveCSS('color', 'rgb(247, 247, 0)');
     await list.getByRole('button').click();
@@ -2181,7 +2181,7 @@ test('web: i18n detects three supported languages, preserves edits, and translat
     await expect(page.getByRole('navigation', { name: '編集タブ' }).getByRole('button')).toHaveText(['概要', 'キャラクター', '部隊', 'アイテム', '魔法', 'パワーランキング']);
     await page.getByRole('button', { name: 'キャラクター', exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'キャラクター表示範囲', exact: true })).toHaveValue('named');
-    await page.getByRole('row', { name: '아레스を編集', exact: true }).click();
+    await page.getByRole('row', { name: 'アレスを編集', exact: true }).click();
     let modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await modal.getByLabel('AT', { exact: true }).fill('77');
     await expect(modal.getByText('基本能力', { exact: true })).toBeVisible();
@@ -2313,5 +2313,108 @@ test('desktop UI: filenames and paths remain verbatim in every language and save
     await expect(page.locator('.save-message')).toHaveText('保存完了・' + name);
     await page.locator('.language-select select').selectOption('en');
     await expect(page.locator('.save-message')).toHaveText('Saved · ' + name);
+  } finally { await browser.close(); }
+});
+
+test('web: Japanese game names update lists and selectors without modifying save bytes', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1920, height: 1000 } });
+  const bytes = save(); bytes[0x9a6 + 220 * 32 + 21] = 16;
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'names.dat', mimeType: 'application/octet-stream', buffer: bytes });
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click();
+    await expect(page.getByRole('row', { name: '아레스 편집', exact: true })).toBeVisible();
+    await page.locator('.language-select select').selectOption('ja');
+    const row = page.getByRole('row', { name: 'アレスを編集', exact: true });
+    await expect(row.locator('[data-column="NAME"]')).toHaveText('アレス');
+    await expect(row.locator('[data-column="CLASS"]')).toHaveText('キング');
+    await expect(row.locator('[data-column="ITEM"]')).toHaveText('エクスカリバー');
+    await expect(row.locator('[data-column="SKILL"]')).toHaveText('サンダー');
+    await row.click();
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    const record = await modal.locator('.record-hex-byte').allTextContents();
+    await expect(modal.getByRole('combobox', { name: 'NAME', exact: true })).toHaveValue('26');
+    await expect(modal.getByRole('combobox', { name: 'NAME', exact: true }).locator('option[value="26"]')).toHaveText('アレス (26)');
+    await expect(modal.getByRole('combobox', { name: 'ITEM', exact: true }).locator('option[value="16"]')).toHaveText('エクスカリバー (16)');
+    await expect(modal.getByRole('combobox', { name: 'SKILL/MAGIC', exact: true }).locator('option[value="6"]')).toHaveText('サンダー (6)');
+    const picker = modal.getByRole('combobox', { name: 'CLASS', exact: true });
+    await picker.click();
+    await expect(modal.locator('.class-select-options li').first().locator('span')).toHaveText('キング');
+    await picker.press('Escape');
+    await expect(modal.locator('.record-hex-byte')).toHaveText(record);
+    await modal.getByRole('button', { name: 'キャラクター編集を閉じる', exact: true }).click();
+    await page.getByRole('button', { name: 'アイテム', exact: true }).click();
+    await expect(page.locator('.inventory-table')).toContainText('エクスカリバー');
+    await page.getByRole('button', { name: '+ アイテム追加', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'ショートソード', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: '魔法', exact: true }).click();
+    await expect(page.locator('.magic-list article').first().locator('h3')).toContainText('キング');
+    await expect(page.locator('.magic-slot select').first().locator('option[value="6"]')).toHaveText('サンダー');
+    await page.locator('.language-select select').selectOption('en');
+    await expect(page.locator('.magic-slot select').first().locator('option[value="6"]')).toHaveText('썬더');
+    await page.getByRole('button', { name: 'Characters', exact: true }).click();
+    await expect(page.getByRole('row', { name: 'Edit 아레스', exact: true })).toBeVisible();
+    const downloaded = page.waitForEvent('download'); await page.getByRole('button', { name: /Download save/ }).click();
+    const path = await (await downloaded).path(); const output = await readFile(path!);
+    const expected = bytes.slice(); expected.fill(0, 0x7da6, 0x7dae);
+    output.fill(0, 0x7da6, 0x7dae); expect(output).toEqual(expected);
+  } finally { await browser.close(); }
+});
+
+test('web: Japanese maps and item descriptions update overview, troops and map selectors', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1920, height: 1000 } });
+  const bytes = save(); bytes[0x59a6] = 0; bytes.writeUInt16LE(0x100, 0x59a8); bytes.writeUInt16LE(0x14a, 0x9a6 + 220 * 32 + 14);
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'maps.dat', mimeType: 'application/octet-stream', buffer: bytes });
+    await expect(page.locator('.overview-list')).toContainText('카리온성');
+    await page.locator('.language-select select').selectOption('ja');
+    await expect(page.locator('.overview-list')).toContainText('カーリオンの城');
+    await page.getByRole('button', { name: 'アイテム', exact: true }).click();
+    const item = page.locator('.inventory-table tbody tr').filter({ hasText: 'エクスカリバー' });
+    await expect(item.locator('.inventory-desc')).toHaveText('AT+20 AR+10 DF+00 DR+05 使う者を疲労させない');
+    await page.getByRole('button', { name: '部隊', exact: true }).click();
+    const row = page.getByRole('row', { name: '部隊8を編集', exact: true });
+    await expect(row.locator('[data-column="MAP-NAME"]')).toHaveText('リンカーの町');
+    await row.click();
+    const troop = page.getByRole('dialog', { name: '部隊編集', exact: true });
+    const map = troop.getByRole('combobox', { name: 'MAP-NAME', exact: true });
+    await expect(map).toHaveValue('256');
+    await expect(map.locator('option[value="256"]')).toHaveText('リンカーの町 (0x0100)');
+    await expect(map.locator('option[value="101"]')).toHaveCount(0);
+    await expect(map.locator('option[value="1"]')).toHaveText('カーリオンの城 (0x0001)');
+    await troop.getByRole('button', { name: '部隊編集を閉じる', exact: true }).click();
+    await page.getByRole('button', { name: 'キャラクター', exact: true }).click();
+    await page.getByRole('row', { name: 'アレスを編集', exact: true }).click();
+    const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
+    const casualty = modal.getByRole('combobox', { name: '死亡・捕虜・行方不明の場所', exact: true });
+    await expect(casualty).toHaveValue('330');
+    await expect(casualty.locator('option[value="330"]')).toHaveText('カーリオンの城 (0x014A)');
+    await modal.getByRole('button', { name: 'キャラクター編集を閉じる', exact: true }).click();
+    await page.locator('.language-select select').selectOption('ko');
+    await page.getByRole('button', { name: '아이템', exact: true }).click();
+    await expect(page.locator('td.inventory-desc').first()).toContainText('쉽게 지치지 않도록 함');
+    const download = page.waitForEvent('download'); await page.getByRole('button', { name: /세이브 파일 다운로드/ }).click();
+    const path = await (await download).path(); const output = await readFile(path!);
+    const expected = bytes.slice(); expected.fill(0, 0x7da6, 0x7dae); output.fill(0, 0x7da6, 0x7dae);
+    expect(output).toEqual(expected);
+  } finally { await browser.close(); }
+});
+
+test('desktop UI: folder map labels follow Japanese selection using stable location IDs', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ja-JP' });
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'fq4rDesktop', { value: { restoreFolder: async () => ({ kind: 'folder', folder: 'C:\\Games\\FQ4R',
+      entries: [{ id: 'save', name: 'save00.dat', summary: { locationId: 10, location: '켄트마을', playMinutes: 20, difficulty: '보통', gold: 0 } }], errors: [] }) } });
+  });
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    await expect(page.locator('.save-location')).toHaveText('ケントの町');
+    await page.locator('.language-select select').selectOption('ko');
+    await expect(page.locator('.save-location')).toHaveText('켄트마을');
+    await expect(page.locator('.save-summary-changed')).toHaveCount(0);
   } finally { await browser.close(); }
 });
