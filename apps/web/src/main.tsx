@@ -38,6 +38,7 @@ function App() {
   const [tab, setTab] = useState('overview');
   const [characterSort, setCharacterSort] = useState<CharacterSort>('default');
   const [characterScope, setCharacterScope] = useState<CharacterScope>('named');
+  const [rankingScope, setRankingScope] = useState<CharacterScope>('named');
   const [showModifiedCharacters, setShowModifiedCharacters] = useState(false);
 
   // Keep one desktop watcher per open file and clean up subscriptions on exit.
@@ -70,7 +71,7 @@ function App() {
   function showFile(name: string, bytes: Uint8Array, saveId?: string) {
     const save = parseSave(new Uint8Array(bytes));
     setSaveMessage(null);
-    setOpened({ name, save, saveId, bytes: new Uint8Array(bytes), originalBytes: bytes.slice(), troopOriginals: undefined, originalSummary: { ...save.summary }, originalCharacters: bytes.slice(0x9a6, 0x59a6), originalMagic: save.magic.map(list => ({ ...list, spells: [...list.spells] })), originalInventory: bytes.slice(0x492, 0x692), originalItemIdentification: bytes.slice(0x696, 0x6de) }); setTab('overview'); setCharacterScope('named'); setCharacterSort('default'); setShowModifiedCharacters(false);
+    setOpened({ name, save, saveId, bytes: new Uint8Array(bytes), originalBytes: bytes.slice(), troopOriginals: undefined, originalSummary: { ...save.summary }, originalCharacters: bytes.slice(0x9a6, 0x59a6), originalMagic: save.magic.map(list => ({ ...list, spells: [...list.spells] })), originalInventory: bytes.slice(0x492, 0x692), originalItemIdentification: bytes.slice(0x696, 0x6de) }); setTab('overview'); setCharacterScope('named'); setRankingScope('named'); setCharacterSort('default'); setShowModifiedCharacters(false);
   }
   async function run(action: () => Promise<InputResult | null>, preserveFolder = false, previousFolder?: Folder) {
     const version = ++sequence.current;
@@ -335,7 +336,7 @@ function App() {
         {opened.save.warnings.map(warning => <p className="notice" key={warning}>{t(warning)}</p>)}
         <section className="tab-panel" key={tab} aria-label={t("탭 내용")} tabIndex={0}>
         {tab === 'overview' && <Overview originalSummary={opened.originalSummary} save={opened.save} onChange={changeOverview} onRepairChecksum={repairChecksum} />}
-        {(tab === 'characters' || tab === 'ranking') && <Characters magic={opened.save.magic} ranking={tab === 'ranking'} originalCharacters={opened.originalCharacters} bytes={opened.bytes} onSave={changeCharacter} characters={opened.save.characters} showModified={showModifiedCharacters} onShowModified={setShowModifiedCharacters} troops={opened.save.troops} scope={characterScope} onScope={setCharacterScope} sort={characterSort} onSort={setCharacterSort} />}
+        {(tab === 'characters' || tab === 'ranking') && <Characters magic={opened.save.magic} ranking={tab === 'ranking'} originalCharacters={opened.originalCharacters} bytes={opened.bytes} onSave={changeCharacter} characters={opened.save.characters} showModified={showModifiedCharacters} onShowModified={setShowModifiedCharacters} troops={opened.save.troops} scope={tab === 'ranking' ? rankingScope : characterScope} onScope={tab === 'ranking' ? setRankingScope : setCharacterScope} sort={characterSort} onSort={setCharacterSort} />}
         {tab === 'inventory' && <Inventory originalInventory={opened.originalInventory} originalIdentification={opened.originalItemIdentification} items={opened.save.inventory} identification={opened.save.itemIdentifications} onChange={changeInventory} onReset={() => changeInventory({ type: 'restore', region: opened.originalInventory, identification: opened.originalItemIdentification })} />}
         {tab === 'troops' && <RosterCharacterEditor bytes={opened.bytes} originalBytes={opened.originalBytes} onChange={changeCharacter}><Troops troops={opened.save.troops} characters={opened.save.characters} bytes={opened.bytes} originalBytes={opened.originalBytes} originalRecords={opened.troopOriginals} onMacro={runTroopMacro} onSwap={swapMembers} onReplace={replaceMember} onAppend={appendMember} onChange={changeTroop} /></RosterCharacterEditor>}
         {tab === 'magic' && <Magic originalLists={opened.originalMagic} lists={opened.save.magic} onChange={changeMagic} onReset={resetMagic} />}

@@ -39,6 +39,13 @@ export function Characters({ ranking = false, magic, characters, troops, scope, 
   visibleCharacters.sort((a, b) => (ranking ? forecasts.get(b.index)!.max - forecasts.get(a.index)!.max : sort === 'name'
     ? characterName(a.nameId).localeCompare(characterName(b.nameId), getLocale() === 'ja' ? 'ja' : 'ko')
     : sort === 'power' ? powers.get(b.index)! - powers.get(a.index)! : 0) || a.index - b.index);
+  // Equal projected maxima share a competition rank (1, 1, 3).
+  // LV 99 예상 최대값이 같으면 공동 순위로 표시합니다(1, 1, 3).
+  const ranks = new Map<number, number>();
+  if (ranking) visibleCharacters.forEach((character, position) => {
+    const maximum = forecasts.get(character.index)!.max;
+    if (!ranks.has(maximum)) ranks.set(maximum, position + 1);
+  });
   const editingPosition = visibleCharacters.findIndex(character => character.index === editing);
   const previous = visibleCharacters[editingPosition - 1]?.index;
   const next = visibleCharacters[editingPosition + 1]?.index;
@@ -53,7 +60,7 @@ export function Characters({ ranking = false, magic, characters, troops, scope, 
       <option value="power">{t("POWER 높은순 정렬")}</option>
     </select>}{ranking && <span className="ranking-description">{t("LV 99 성장 시 예상 최대 POWER 기준 순위입니다.")}</span>}</div>
     <div className="table-scroll"><table className={`character-table${ranking ? ' ranking-table' : ''}`}><thead><tr>{(ranking ? rankingColumns : columns).map(column => <th key={column} data-column={column} scope="col" title={t(ranking ? column === 'POWER' ? '현재 파워' : column === 'Lv99 POWER' ? '현재 직업으로 LV 99까지 성장했을 때 가능한 POWER 최소~최대값 (아이템·피로도 제외)' : column === 'SKILL' ? '현재 직업의 마법 스킬 사용 가능 여부' : undefined : undefined)} className={columnColor(column)}>{t(column)}</th>)}</tr></thead>
-      <tbody>{visibleCharacters.map((character, rank) => {
+      <tbody>{visibleCharacters.map(character => {
         // Display the known HR/AD/MD conversions without changing stored raw bytes.
         // 저장된 원시 바이트는 변경하지 않고 확인된 HR/AD/MD 표시 규칙을 적용합니다.
         const currentRecord = bytes.subarray(0x9a6 + character.index * 32, 0x9a6 + (character.index + 1) * 32);
@@ -89,7 +96,7 @@ export function Characters({ ranking = false, magic, characters, troops, scope, 
         const elements = [[0x10, 'F'], [0x20, 'E'], [0x40, 'A'], [0x80, 'W']] as const;
         const el = elements.map(([mask, name]) => character.elementFlags & mask ? name : '-').join('');
         return <tr key={character.index} className="character-edit-row" tabIndex={0} aria-label={t(`${characterName(character.nameId)} 편집`)} onClick={() => setEditing(character.index)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setEditing(character.index); } }}>
-          {ranking && <td data-column="RANK">{rank + 1}</td>}<td data-column="ID" className={cellClass('ID')}>{character.index}{t(recordChanged ? '*' : '')}</td><td data-column="LEAD" className={cellClass('LEAD')}>{t(character.lead > 0 ? `⭐${character.lead}` : '')}</td><td data-column="NAME" className={cellClass('NAME', character.nameId === 0)}>{t(characterName(character.nameId))}</td>
+          {ranking && <td data-column="RANK">{ranks.get(forecast!.max)}</td>}<td data-column="ID" className={cellClass('ID')}>{character.index}{t(recordChanged ? '*' : '')}</td><td data-column="LEAD" className={cellClass('LEAD')}>{t(character.lead > 0 ? `⭐${character.lead}` : '')}</td><td data-column="NAME" className={cellClass('NAME', character.nameId === 0)}>{t(characterName(character.nameId))}</td>
           <td data-column="CLASS" className={cellClass('CLASS')}><span className="character-class"><ClassImage classId={character.classId} />{t(className(character.classId))}</span></td><td data-column="POWER" className={cellClass('POWER')} title={t(ranking ? "아이템·피로도를 제외한 현재 레벨의 개인 POWER" : "장비·피로·직업 보정을 포함한 개인 POWER")}>{currentValues.POWER}</td>{ranking && <td data-column="Lv99 POWER" className={forecast!.min !== originalForecast!.min || forecast!.max !== originalForecast!.max ? 'character-cell-changed' : undefined} title={t("아이템·피로도를 제외하고 현재 직업을 유지한 LV 99 성장 범위")} >{forecasts.get(character.index)!.min}~{forecasts.get(character.index)!.max}</td>}<td data-column="LV" className={cellClass('LV')}>{t(stat('LV', character.level))}</td><td data-column="HP" className={cellClass('HP')}>{t(stat('HP', character.hp))}</td>
           <td data-column="HR" className={cellClass('HR')} title={t(`저장 HR: ${character.recoveryRaw}`)}>{t(stat('HR', hr))}</td><td data-column="AT" className={cellClass('AT')}>{t(stat('AT', character.attack))}</td><td data-column="AR" className={cellClass('AR')}>{t(stat('AR', character.hit))}</td>
           <td data-column="DF" className={cellClass('DF')}>{t(stat('DF', character.defense))}</td><td data-column="DR" className={cellClass('DR')}>{t(stat('DR', character.evasion))}</td>

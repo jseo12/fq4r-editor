@@ -2083,7 +2083,7 @@ test('web: character sorting respects filters, navigation, and toolbar alignment
 });
 
 
-test('web: ranking shows level99 bounds, ranks by maximum, and shares character filters', async () => {
+test('web: ranking shows level99 bounds, ranks by maximum, and keeps character filters independent', async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
   const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1920, height: 1000 } });
   try {
@@ -2109,7 +2109,7 @@ test('web: ranking shows level99 bounds, ranks by maximum, and shares character 
     const columns = ['RANK', 'ID', 'LEAD', 'NAME', 'CLASS', 'POWER', 'Lv99 POWER', 'LV', 'HP', 'HR', 'AT', 'AR', 'DF', 'DR', 'AD', 'AA', 'MD', 'SKILL'];
     await expect(table.locator('th')).toHaveText(columns);
     await expect(rows.locator('td[data-column="ID"]')).toHaveText(expected.map(c => String(c.id)));
-    await expect(rows.locator('td[data-column="RANK"]')).toHaveText(expected.map((_, i) => String(i + 1)));
+    await expect(rows.locator('td[data-column="RANK"]')).toHaveText(expected.map(character => String(1 + expected.filter(other => other.max > character.max).length)));
     await expect(rows.locator('td[data-column="Lv99 POWER"]')).toHaveText(expected.map(c => `${c.min}~${c.max}`));
     const ares = table.getByRole('row', { name: '아레스 편집', exact: true });
     await expect(ares.locator('td[data-column="SKILL"]')).toHaveText('소환');
@@ -2138,15 +2138,18 @@ test('web: ranking shows level99 bounds, ranks by maximum, and shares character 
     await page.setViewportSize({ width: 1600, height: 1000 });
     const scope = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
     await scope.selectOption('allied'); await expect(rows).toHaveCount(4);
-    await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await expect(scope).toHaveValue('allied');
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await expect(scope).toHaveValue('named');
+    await scope.selectOption('all');
     await page.getByRole('row', { name: '아레스 편집', exact: true }).click();
     const modal = page.getByRole('dialog', { name: 'ID 220', exact: true });
     await modal.getByLabel('HP', { exact: true }).fill('999');
     await modal.getByRole('button', { name: '캐릭터 편집 닫기', exact: true }).click();
     await page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true }).check();
     await page.getByRole('button', { name: '파워랭킹', exact: true }).click();
+    await expect(scope).toHaveValue('allied');
     await expect(rows).toHaveCount(4);
-    await expect(rows.locator('[data-column="RANK"]')).toHaveText(['1', '2', '3', '4']);
+    const scores = (await rows.locator('[data-column="Lv99 POWER"]').allTextContents()).map(text => Number(text.split('~')[1]));
+    await expect(rows.locator('[data-column="RANK"]')).toHaveText(scores.map(score => String(1 + scores.filter(other => other > score).length)));
     await expect(page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true })).toHaveCount(0);
     const edited = table.getByRole('row', { name: '아레스 편집', exact: true });
     await expect(edited.locator('[data-column="ID"]')).toHaveText('220*');
@@ -2156,6 +2159,10 @@ test('web: ranking shows level99 bounds, ranks by maximum, and shares character 
     await page.getByRole('button', { name: '캐릭터', exact: true }).click();
     await expect(page.getByRole('checkbox', { name: '수정한 캐릭터만 표시', exact: true })).toBeChecked();
     await expect(page.locator('.character-table tbody tr')).toHaveCount(1);
+    await expect(scope).toHaveValue('all');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'new-ranking.dat', mimeType: 'application/octet-stream', buffer: save() });
+    await page.getByRole('button', { name: '파워랭킹', exact: true }).click(); await expect(scope).toHaveValue('named');
+    await page.getByRole('button', { name: '캐릭터', exact: true }).click(); await expect(scope).toHaveValue('named');
 
   } finally { await browser.close(); }
 });
@@ -2416,5 +2423,31 @@ test('desktop UI: folder map labels follow Japanese selection using stable locat
     await page.locator('.language-select select').selectOption('ko');
     await expect(page.locator('.save-location')).toHaveText('켄트마을');
     await expect(page.locator('.save-summary-changed')).toHaveCount(0);
+  } finally { await browser.close(); }
+});
+
+test('web: ranking ties use maximum level99 POWER and competition ranks within each scope', async () => {
+  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const page = await browser.newPage({ locale: 'ko-KR', viewport: { width: 1600, height: 1000 } });
+  const data = save(); data[0x59a6] = 0;
+  for (const [id, hp] of [[0, 0], [220, 794], [221, 800], [639, 600]]) {
+    const offset = 0x9a6 + id * 32; data[offset + 24] = id === 220 ? 98 : 99; data.writeUInt16LE(hp, offset + 26);
+  }
+  data[0x9a6 + 221 * 32 + 29] = 1;
+  try {
+    await page.goto('http://127.0.0.1:5174');
+    await page.getByLabel('세이브 파일 선택', { exact: true }).setInputFiles({ name: 'ties.dat', mimeType: 'application/octet-stream', buffer: data });
+    await page.getByRole('button', { name: '파워랭킹', exact: true }).click();
+    const scope = page.getByRole('combobox', { name: '캐릭터 표시 범위', exact: true });
+    await scope.selectOption('allied');
+    const rows = page.locator('.ranking-table tbody tr');
+    await expect(rows.locator('[data-column="ID"]')).toHaveText(['220', '221', '639', '0']);
+    await expect(rows.locator('[data-column="RANK"]')).toHaveText(['1', '1', '3', '4']);
+    const ranges = await rows.locator('[data-column="Lv99 POWER"]').allTextContents();
+    expect(ranges[0].split('~')[1]).toBe(ranges[1].split('~')[1]); expect(ranges[0]).not.toBe(ranges[1]);
+    await scope.selectOption('named');
+    const named = await rows.locator('[data-column="ID"]').allTextContents();
+    const tiedRanks = await rows.locator('[data-column="RANK"]').allTextContents();
+    expect(tiedRanks[named.indexOf('220')]).toBe(tiedRanks[named.indexOf('221')]);
   } finally { await browser.close(); }
 });
