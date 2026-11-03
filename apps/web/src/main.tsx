@@ -323,7 +323,7 @@ function App() {
       <p className="privacy">{t("세이브 파일은 브라우저 또는 데스크톱에서만 처리되며 서버로 전송되지 않습니다.")}</p>
       {t(error && <div className="notice error" role="alert">{t(error)}</div>)}
     </section>
-    <footer className="loading-footer"><p>ⓒ CorpsePlay.com | <a href="https://github.com/jseo12/fq4r-editor" target="_blank" rel="noreferrer">GitHub</a></p><p className="font-credit"><a href="https://ridicorp.com/ridibatang/" target="_blank" rel="noreferrer">{t("이 페이지는 리디주식회사에서 제공한 리디바탕 글꼴이 사용되어 있습니다.")}</a></p></footer>
+    <footer className="loading-footer"><p>ⓒ CorpsePlay.com | <a href="https://github.com/jseo12/fq4r-editor" target="_blank" rel="noreferrer">GitHub</a>{!desktop && <> | <a href="https://github.com/jseo12/fq4r-editor/releases" target="_blank" rel="noreferrer">{t("데스크톱 앱 다운로드")}</a></>}</p><p className="font-credit"><a href="https://ridicorp.com/ridibatang/" target="_blank" rel="noreferrer">{t("이 페이지는 리디주식회사에서 제공한 리디바탕 글꼴이 사용되어 있습니다.")}</a></p></footer>
     </section>}
       {opened && <section className="editor" aria-label={t("세이브 에디터")}>
         <header className="editor-header">
